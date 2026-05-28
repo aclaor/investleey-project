@@ -934,8 +934,8 @@ function updateAuthUI(user) {
     nameSpan.textContent=name;
     var badge=document.createElement('span');
     badge.style.cssText='background:rgba(240,185,11,0.15);color:#f0b90b;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid rgba(240,185,11,0.3);cursor:pointer;';
-    badge.textContent=plan.toUpperCase();
-    if(!isPro){ badge.onclick=function(){showPricing();}; }
+    badge.textContent=plan.toUpperCase()+(isPro?'':' ⚡');
+    badge.onclick=function(){showPricing();};
     info.appendChild(dot);info.appendChild(nameSpan);info.appendChild(badge);
     var signout=document.createElement('button');
     signout.className='nav-btn';
