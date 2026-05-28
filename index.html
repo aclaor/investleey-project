@@ -460,7 +460,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
         <span class="fc-pill" id="fc-pill-2" style="color:var(--accent);">—</span>
       </div>
       <!-- Persistent signup banner on chart -->
-      <div id="chart-signup-banner" style="display:none!important;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;background:rgba(6,8,16,0.95);border:1px solid rgba(14,203,129,0.5);border-radius:10px;padding:16px 20px;backdrop-filter:blur(8px);text-align:center;box-shadow:0 0 30px rgba(14,203,129,0.12);width:90%;max-width:420px;box-sizing:border-box;">
+      <div id="chart-signup-banner" style="display:none!important;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;background:rgba(6,8,16,0.95);border:1px solid rgba(14,203,129,0.5);border-radius:10px;padding:16px 20px;backdrop-filter:blur(8px);text-align:center;width:90%;max-width:420px;box-sizing:border-box;">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ecb81;margin-bottom:6px;letter-spacing:1px;text-shadow:0 0 10px rgba(14,203,129,0.4);">⚡ UNLOCK UNLIMITED AI FORECASTS</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:12px;">Free forever (2hrs/day) · No credit card · Cancel anytime</div>
         <button onclick="showModal('signup')" style="background:linear-gradient(135deg,#0ecb81,#00ff88);border:none;border-radius:6px;padding:10px 28px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#000;cursor:pointer;letter-spacing:0.5px;">START FREE TRIAL ⚡</button>
@@ -1431,7 +1431,7 @@ window.addEventListener('DOMContentLoaded',function(){
   // Track visits
   var visitCount=parseInt(localStorage.getItem('investleey_forecast_count_visits')||'0')+1;
   localStorage.setItem('investleey_forecast_count_visits',visitCount);
-  if(visitCount>=3&&!currentUser){setTimeout(function(){var banner=document.getElementById('chart-signup-banner');if(banner)banner.style.display='block';},5000);}
+  // banner only shows via 2hr time limit
   document.getElementById('pair-input').value='AAPL';
   setTimeout(function(){runForecast(true);},1500);
   setTimeout(renderStockGrid,500);
