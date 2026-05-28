@@ -1463,5 +1463,57 @@ window.addEventListener('DOMContentLoaded',function(){
   </div>
 </div>
 <div id="bottom-bar-inner" style="display:flex;white-space:nowrap;position:fixed;bottom:0;left:0;right:0;height:0;overflow:hidden;"></div>
+
+<div class="pricing-modal hidden" id="pricing-modal">
+  <div class="pricing-box">
+    <button class="close-btn2" onclick="closePricing()">×</button>
+    <div class="pricing-title">⚡ INVESTLEEY PLANS</div>
+    <div class="pricing-sub">Unlock the power of AI stock forecasting</div>
+    <div style="text-align:center;margin-bottom:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;">⭐ Join 500+ traders already using ZEUS-AI</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <div class="plan-card" style="flex:1;min-width:160px;max-width:220px;">
+        <div class="plan-name2">Free</div>
+        <div class="plan-price2">$0<small>/forever</small></div>
+        <ul class="plan-features">
+          <li>2 hrs/day free usage</li>
+          <li>All intervals (1m–1D)</li>
+          <li>All major stocks</li>
+          <li>AI signal (Bull/Bear)</li>
+          <li class="no">Unlimited usage</li>
+        </ul>
+        <button class="plan-btn free-btn" onclick="closePricing();showModal('signup')">START FREE</button>
+      </div>
+      <div class="plan-card featured" style="flex:1;min-width:160px;max-width:220px;">
+        <span class="plan-badge2 hot">⚡ POPULAR</span>
+        <div class="plan-name2">Pro</div>
+        <div class="plan-price2">$17<small>/mo</small></div>
+        <ul class="plan-features">
+          <li>Unlimited forecasts</li>
+          <li>All intervals (1m–1D)</li>
+          <li>All stocks &amp; ETFs</li>
+          <li>Full AI suite</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="plan-btn pro-btn" onclick="startPayPal('pro')">GET PRO ⚡</button>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Cancel anytime · Instant access</div>
+        <div id="paypal-btn-container"></div>
+      </div>
+      <div class="plan-card" style="flex:1;min-width:160px;max-width:220px;border-color:#f0b90b;">
+        <span class="plan-badge2" style="background:#f0b90b;color:#000;">👑 MAX</span>
+        <div class="plan-name2" style="color:#f0b90b;">Max</div>
+        <div class="plan-price2">$49<small>/mo</small></div>
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>5x more AI capacity</li>
+          <li>Early access features</li>
+          <li>Dedicated support</li>
+          <li>Priority at high traffic</li>
+        </ul>
+        <button class="plan-btn" style="background:linear-gradient(90deg,#f0b90b,#ff9900);color:#000;border:none;padding:10px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;width:100%;" onclick="startPayPal('max')">GET MAX 👑</button>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Cancel anytime · Instant access</div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
