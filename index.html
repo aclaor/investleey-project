@@ -1326,7 +1326,7 @@ function makeStockCard(s,color){
   var card=document.createElement('div');card.className='stock-grid-card';
   card.style.cssText='border-color:'+border+';background:'+bg+';cursor:pointer;';
   card.setAttribute('data-sym',sym);
-  card.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});loadPair(this.getAttribute('data-sym'));};
+  card.setAttribute('onclick','window.scrollTo({top:0,behavior:"smooth"});loadPair(this.getAttribute("data-sym"))');
   var d1=document.createElement('div');d1.className='sgc-sym';d1.textContent=sym;
   var d2=document.createElement('div');d2.className='sgc-price';d2.textContent='$'+price.toLocaleString(undefined,{maximumFractionDigits:price<1?6:price<10?4:2});
   var d3=document.createElement('div');d3.className='sgc-chg';d3.style.color=up?'#0ecb81':'#f6465d';d3.textContent=(up?'+':'')+chg.toFixed(2)+'%';
