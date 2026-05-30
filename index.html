@@ -1262,6 +1262,11 @@ async function runForecast(isAutoRun){
   if(!currentUser && !isAdmin){
     var now=Date.now();
     var sessionStart=parseInt(localStorage.getItem('inv_session_start')||'0');
+    if(sessionStart>0&&(now-sessionStart)>7*24*60*60*1000){
+      localStorage.removeItem('inv_session_start');
+      localStorage.removeItem('inv_wait_until');
+      sessionStart=0;
+    }
     var waitUntil=parseInt(localStorage.getItem('inv_wait_until')||'0');
     if(waitUntil>now&&!isAutoRun){showTimeLimit(Math.ceil((waitUntil-now)/60000));return;}
     if(!sessionStart){sessionStart=now;localStorage.setItem('inv_session_start',sessionStart);}
