@@ -1264,6 +1264,7 @@ function renderAll(data) {
   if(isShort){
     var fv200=data.forecast_vwap200;
     var _idx = currentInterval==='1m' ? 29 : 4;
+    var threshold_pct = currentInterval==='1m' ? 0.0002 : 0.0005;
     if(fv200&&fv200.length>_idx){
       var v200_first=fv200[0],v200_fifth=fv200[_idx];
       var threshold=(data.last_close||v200_first)*0.0005;
