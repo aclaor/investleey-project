@@ -1413,57 +1413,60 @@ function renderStockGrid(){
   grid.innerHTML=stocks.map(function(s){return makeStockCard(s,null);}).join('');
 }
 async function renderAllStockGrids(){
-  var symbols=['NVDA','AAPL','TSLA','AMD','META','MSFT','GOOGL','AMZN',
-               'NFLX','COIN','HOOD','UBER','GME','AMC','BB','PTON','NIO','MSTR','PLTR','SOFI'];
-  var stocks=[];
-
-  // Try multiple sources
-  async function tryYahoo(){
-    var urls=[
-      'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US',
-      'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US',
-    ];
-    for(var i=0;i<urls.length;i++){
-      try{
-        var resp=await fetch(urls[i],{mode:'cors',headers:{'Accept':'application/json'}});
-        var data=await resp.json();
-        var quotes=data&&data.quoteResponse&&data.quoteResponse.result;
-        if(quotes&&quotes.length>0){
-          return quotes.map(function(q){return{symbol:q.symbol,price:q.regularMarketPrice||0,changesPercentage:q.regularMarketChangePercent||0,volume:q.regularMarketVolume||0};}).filter(function(s){return s.price>0;});
-        }
-      }catch(e){console.log('Yahoo source '+i+' failed:',e.message);}
+  var active=[], gainers=[], losers=[], pennies=[];
+  try{
+    var resp = await fetch(API_BASE+'/movers');
+    var data = await resp.json();
+    if(data && data.active && data.active.length){
+      active  = data.active  || [];
+      gainers = data.gainers || [];
+      losers  = data.losers  || [];
+      pennies = data.pennies || [];
+      console.log('Stock grids: live from Railway /movers');
+      var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
+      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items.length)el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
+      return;
     }
-    return [];
-  }
+  }catch(e){console.log('Railway /movers failed:',e.message);}
 
-  try{ stocks=await tryYahoo(); }catch(e){}
+  // Fallback static data
+  var stocks=[
+    {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},
+    {symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
+    {symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},
+    {symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
+    {symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},
+    {symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},
+    {symbol:'GOOGL',price:175.85,changesPercentage:-0.6,volume:20444813},
+    {symbol:'AMZN',price:201.32,changesPercentage:0.5,volume:27540521},
+    {symbol:'NFLX',price:1285.40,changesPercentage:1.8,volume:4847196},
+    {symbol:'COIN',price:248.15,changesPercentage:-2.1,volume:7927507},
+    {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},
+    {symbol:'UBER',price:88.22,changesPercentage:1.4,volume:19688917},
+    {symbol:'GME',price:21.96,changesPercentage:-2.4,volume:5279748},
+    {symbol:'AMC',price:2.51,changesPercentage:-3.2,volume:20258044},
+    {symbol:'BB',price:3.91,changesPercentage:4.5,volume:12770209},
+    {symbol:'PTON',price:5.71,changesPercentage:2.3,volume:8901844},
+    {symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
+    {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},
+    {symbol:'SOFI',price:14.25,changesPercentage:1.8,volume:32000000},
+    {symbol:'MSTR',price:389.50,changesPercentage:2.1,volume:6000000},
+  ];
+  active  = stocks.slice().sort(function(a,b){return b.volume-a.volume;});
+  gainers = stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
+  losers  = stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;});
+  pennies = stocks.filter(function(s){return s.price<15;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
 
-  // If all APIs fail use static fallback
-  if(!stocks.length){
-    console.log('Using static fallback data');
-    stocks=[
-      {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},
-      {symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
-      {symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},
-      {symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
-      {symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},
-      {symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},
-      {symbol:'GOOGL',price:175.85,changesPercentage:-0.6,volume:20444813},
-      {symbol:'AMZN',price:201.32,changesPercentage:0.5,volume:27540521},
-      {symbol:'NFLX',price:1285.40,changesPercentage:1.8,volume:4847196},
-      {symbol:'COIN',price:248.15,changesPercentage:-2.1,volume:7927507},
-      {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},
-      {symbol:'UBER',price:88.22,changesPercentage:1.4,volume:19688917},
-      {symbol:'GME',price:21.96,changesPercentage:-2.4,volume:5279748},
-      {symbol:'AMC',price:2.51,changesPercentage:-3.2,volume:20258044},
-      {symbol:'BB',price:3.91,changesPercentage:4.5,volume:12770209},
-      {symbol:'PTON',price:5.71,changesPercentage:2.3,volume:8901844},
-      {symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
-      {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},
-      {symbol:'SOFI',price:14.25,changesPercentage:1.8,volume:32000000},
-      {symbol:'MSTR',price:389.50,changesPercentage:2.1,volume:6000000},
-    ];
-  }
+  // Render fallback grids
+  var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
+  Object.keys(grids).forEach(function(id){
+    var el=document.getElementById(id);
+    var cfg=grids[id];
+    if(el&&cfg.items.length) el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');
+    else if(el) el.innerHTML='<div style="color:#607a99;font-size:10px;padding:8px;">No data</div>';
+  });
+}
+function buildGrids(stocks){
 
   var active=staticStocks.slice().sort(function(a,b){return b.volume-a.volume;});
   var gainers=staticStocks.slice().filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
@@ -1472,6 +1475,7 @@ async function renderAllStockGrids(){
   var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
   Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
 }
+
 function drawMiniCharts(){
   var charts=[
     {id:'mini-chart-spy',color:'#0ecb81',points:[505,508,510,507,511,512,514,513,515,512,514,516]},
@@ -1539,8 +1543,8 @@ window.addEventListener('DOMContentLoaded',function(){
   document.getElementById('pair-input').value='AAPL';
   setTimeout(function(){runForecast(true);},1500);
   setTimeout(renderStockGrid,500);
-  setTimeout(function(){renderAllStockGrids().catch(function(e){console.log("Grid error:",e);});},500);
-  setInterval(function(){renderAllStockGrids().catch(function(e){console.log("Grid error:",e);});},120000);
+  setTimeout(function(){renderAllStockGrids().catch(function(e){console.log(e);});},500);
+  setInterval(function(){renderAllStockGrids().catch(function(e){console.log(e);});},120000);
   setTimeout(drawMiniCharts,800);
   window.addEventListener('resize',drawMiniCharts);
 });
