@@ -1253,39 +1253,39 @@ function fillMarketTable(tbodyId,list){
 }
 async function fetchLiveMarkets(){
   try{
-    var resp = await fetch(API_BASE+'/movers');
-    var data = await resp.json();
-    if(data && data.active && data.active.length){
-      fillMarketTable('tbl-active', data.active||[]);
-      fillMarketTable('tbl-gainers', data.gainers||[]);
-      fillMarketTable('tbl-losers', data.losers||[]);
-      var all=[...(data.active||[]),...(data.gainers||[]),...(data.losers||[])];
-      var seen=new Set();
-      var trending=all.filter(function(s){if(seen.has(s.symbol))return false;seen.add(s.symbol);return true;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
-      fillMarketTable('tbl-trending', trending);
+    var r=await fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/gainers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var gdata=await r.json();
+    var r2=await fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/losers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var ldata=await r2.json();
+    if(gdata&&gdata.tickers&&gdata.tickers.length){
+      var gainers=gdata.tickers.map(function(t){return{symbol:t.ticker,price:t.day&&t.day.c||0,changesPercentage:t.todaysChangePerc||0,volume:t.day&&t.day.v||0};});
+      var losers=ldata.tickers?ldata.tickers.map(function(t){return{symbol:t.ticker,price:t.day&&t.day.c||0,changesPercentage:t.todaysChangePerc||0,volume:t.day&&t.day.v||0};}):[];
+      var all=[...gainers,...losers];var seen=new Set();
+      var active=all.filter(function(s){if(seen.has(s.symbol))return false;seen.add(s.symbol);return true;}).sort(function(a,b){return b.volume-a.volume;});
+      var trending=all.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
+      fillMarketTable('tbl-active',active);fillMarketTable('tbl-gainers',gainers);fillMarketTable('tbl-losers',losers);fillMarketTable('tbl-trending',trending);
       return;
     }
-  }catch(e){console.log('Markets /movers failed:',e.message);}
-
-  // Fallback
-  var stocks=[
-    {symbol:'NVDA',name:'NVIDIA',price:128.26,changesPercentage:1.2,volume:169339208},
-    {symbol:'AAPL',name:'Apple',price:211.45,changesPercentage:0.8,volume:43669609},
-    {symbol:'TSLA',name:'Tesla',price:342.10,changesPercentage:-1.5,volume:46104415},
-    {symbol:'AMD',name:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
-    {symbol:'META',name:'Meta',price:592.69,changesPercentage:-0.4,volume:15000000},
-    {symbol:'MSFT',name:'Microsoft',price:461.20,changesPercentage:0.3,volume:22000000},
-    {symbol:'PLTR',name:'Palantir',price:124.80,changesPercentage:3.2,volume:45000000},
-    {symbol:'NIO',name:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
-    {symbol:'RIVN',name:'Rivian',price:16.54,changesPercentage:4.2,volume:22000000},
-    {symbol:'HOOD',name:'Robinhood',price:73.64,changesPercentage:-3.0,volume:20817527},
-  ];
+  }catch(e){console.log('Polygon markets failed:',e.message);}
+  // Fallback: Yahoo Finance via Railway
+  try{
+    var resp=await fetch(API_BASE+'/movers');var data=await resp.json();
+    if(data&&data.active&&data.active.length){
+      fillMarketTable('tbl-active',data.active||[]);fillMarketTable('tbl-gainers',data.gainers||[]);
+      fillMarketTable('tbl-losers',data.losers||[]);
+      var all2=[...(data.active||[]),...(data.gainers||[]),...(data.losers||[])];
+      var seen2=new Set();var trending2=all2.filter(function(s){if(seen2.has(s.symbol))return false;seen2.add(s.symbol);return true;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
+      fillMarketTable('tbl-trending',trending2);return;
+    }
+  }catch(e){console.log('Railway movers failed:',e.message);}
+  // Static fallback
+  var stocks=[{symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},{symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},{symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},{symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},{symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},{symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},{symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},{symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830}];
   fillMarketTable('tbl-active',stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
   fillMarketTable('tbl-gainers',stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
   fillMarketTable('tbl-losers',stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
   fillMarketTable('tbl-trending',stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
-
 }
+
 function makeStockCard(s,color){
   var up=parseFloat(s.changesPercentage||0)>=0,sym=s.symbol||'',price=parseFloat(s.price||0),chg=parseFloat(s.changesPercentage||0);
   var bg=color?'rgba('+color+',0.06)':(up?'rgba(14,203,129,0.08)':'rgba(246,70,93,0.08)');
@@ -1871,14 +1871,100 @@ function updateUpgradePrompt(){
 }
 
 function toggleFAQ(){var c=document.getElementById('faq-content'),a=document.getElementById('faq-arrow');if(c.style.display==='none'){c.style.display='block';if(a)a.textContent='▲';}else{c.style.display='none';if(a)a.textContent='▼';}}
-var _miLoaded={earnings:false,splits:false,ipo:false,economic:false};
-function miTab(t){['earnings','splits','ipo','economic','screeners'].forEach(function(id){document.getElementById('mi-'+id).style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();}
+var _miLoaded={earnings:false,splits:false,dividends:false,ipo:false,economic:false,gainers:false};
+function miTab(t){['earnings','splits','dividends','ipo','economic','gainers','screeners'].forEach(function(id){var el=document.getElementById('mi-'+id);if(el)el.style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='dividends'&&!_miLoaded.dividends)loadMIDividends();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();else if(t==='gainers'&&!_miLoaded.gainers)loadMIGainers();}
+
 function miTile(symbol,name,detail,badge,badgeColor){var colors=['#0ecb81','#00b4d8','#f0b90b','#f6465d','#9b59b6','#e67e22'];var col=colors[symbol.charCodeAt(0)%colors.length];var init=symbol.replace('.','').substring(0,2).toUpperCase();return '<div onclick="miLoadForecast(\''+symbol+'\')" style="background:#131926;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#0ecb81\'" onmouseout="this.style.borderColor=\'#1e2a40\'">'+'<div style="height:60px;display:flex;align-items:center;justify-content:center;font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:'+col+';background:'+col+'15;">'+init+'</div>'+'<div style="padding:8px 10px;"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:#d0e0f0;margin-bottom:2px;">'+symbol+'</div><div style="font-size:9px;color:#607a99;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+(detail?'<div style="font-size:9px;color:#607a99;margin-bottom:4px;">'+detail+'</div>':'')+(badge?'<span style="font-size:8px;padding:2px 5px;border-radius:3px;background:'+badgeColor+'18;color:'+badgeColor+';border:1px solid '+badgeColor+'44;font-family:IBM Plex Mono,monospace;">'+badge+'</span>':'')+'</div></div>';}
 function miLoadForecast(symbol){window.scrollTo({top:0,behavior:'smooth'});var inp=document.getElementById('pair-input');if(inp)inp.value=symbol;setTimeout(function(){if(typeof runForecast==='function')runForecast();},400);}
+function loadMIDividends(){_miLoaded.dividends=true;var g=document.getElementById('mi-dividends-grid');if(g)g.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
+  var today=new Date(),from=today.toISOString().split('T')[0],to=new Date(today.getTime()+30*86400000).toISOString().split('T')[0];
+  fetch('https://api.polygon.io/v3/reference/dividends?ex_dividend_date.gte='+from+'&ex_dividend_date.lte='+to+'&limit=20&order=asc&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+  .then(function(r){return r.json();}).then(function(data){
+    if(data&&data.results&&data.results.length){
+      var html='';
+      data.results.forEach(function(d){
+        var dt=d.ex_dividend_date?d.ex_dividend_date.replace(/\d{4}-/,'').replace('-','/'):'—';
+        var amt=d.cash_amount?'$'+parseFloat(d.cash_amount).toFixed(4)+'/share':'—';
+        html+=miTile(d.ticker,d.ticker,'Ex-div: '+dt+' · '+amt,'DIV','#0ecb81');
+      });
+      if(g)g.innerHTML=html;
+    } else {
+      if(g)g.innerHTML='<div style="color:#607a99;font-size:11px;padding:20px;">No dividends data available</div>';
+    }
+  }).catch(function(){if(g)g.innerHTML='<div style="color:#607a99;font-size:11px;padding:20px;">Could not load dividends</div>';});
+}
+
+function loadMIGainers(){_miLoaded.gainers=true;
+  var gg=document.getElementById('mi-gainers-grid'),lg=document.getElementById('mi-losers-grid');
+  if(gg)gg.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
+  if(lg)lg.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
+  fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/gainers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+  .then(function(r){return r.json();}).then(function(data){
+    if(data&&data.tickers&&data.tickers.length){
+      var html='';
+      data.tickers.slice(0,18).forEach(function(t){
+        var chg=t.todaysChangePerc||0,price=t.day&&t.day.c||t.prevDay&&t.prevDay.c||0;
+        html+=miTile(t.ticker,t.ticker,'$'+parseFloat(price).toFixed(2),(chg>=0?'+':'')+parseFloat(chg).toFixed(2)+'%','#0ecb81');
+      });
+      if(gg)gg.innerHTML=html;
+    }
+  }).catch(function(){if(gg)gg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load gainers</div>';});
+  fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/losers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+  .then(function(r){return r.json();}).then(function(data){
+    if(data&&data.tickers&&data.tickers.length){
+      var html='';
+      data.tickers.slice(0,18).forEach(function(t){
+        var chg=t.todaysChangePerc||0,price=t.day&&t.day.c||t.prevDay&&t.prevDay.c||0;
+        html+=miTile(t.ticker,t.ticker,'$'+parseFloat(price).toFixed(2),(chg>=0?'+':'')+parseFloat(chg).toFixed(2)+'%','#f6465d');
+      });
+      if(lg)lg.innerHTML=html;
+    }
+  }).catch(function(){if(lg)lg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load losers</div>';});
+}
+
 function loadMIEarnings(){_miLoaded.earnings=true;var label=document.getElementById('mi-earnings-label');var grid=document.getElementById('mi-earnings-grid');var today=new Date();var from=today.toISOString().split('T')[0];var to=new Date(today.getTime()+7*86400000).toISOString().split('T')[0];fetch('https://financialmodelingprep.com/api/v3/earning_calendar?from='+from+'&to='+to+'&apikey=demo',{mode:'cors'}).then(function(r){return r.json();}).then(function(data){if(data&&data.length){if(label)label.textContent='This week · '+data.length+' companies reporting';var html='';data.slice(0,20).forEach(function(e){var d=e.date?e.date.split('T')[0].replace(/\d{4}-/,'').replace('-','/'):'';var eps=e.epsEstimated?'EPS est: $'+parseFloat(e.epsEstimated).toFixed(2):'';html+=miTile(e.symbol,e.name||e.symbol,d+' · '+eps,'EARNINGS','#f0b90b');});if(grid)grid.innerHTML=html;}else{loadMIEarningsFallback(label,grid);}}).catch(function(){loadMIEarningsFallback(label,grid);});}
 function loadMIEarningsFallback(label,grid){var data=[{symbol:'AAPL',name:'Apple Inc',date:'Jun 10',eps:'EPS est: $1.95'},{symbol:'MSFT',name:'Microsoft',date:'Jun 11',eps:'EPS est: $3.22'},{symbol:'NVDA',name:'NVIDIA Corp',date:'Jun 11',eps:'EPS est: $0.65'},{symbol:'TSLA',name:'Tesla Inc',date:'Jun 12',eps:'EPS est: $0.45'},{symbol:'META',name:'Meta Platforms',date:'Jun 10',eps:'EPS est: $5.12'},{symbol:'GOOGL',name:'Alphabet',date:'Jun 12',eps:'EPS est: $2.15'},{symbol:'AMZN',name:'Amazon',date:'Jun 11',eps:'EPS est: $1.02'},{symbol:'JPM',name:'JPMorgan Chase',date:'Jun 8',eps:'EPS est: $4.63'}];if(label)label.textContent='This week · '+data.length+' companies reporting';var html='';data.forEach(function(e){html+=miTile(e.symbol,e.name,e.date+' · '+e.eps,'EARNINGS','#f0b90b');});if(grid)grid.innerHTML=html;}
-function loadMISplits(){_miLoaded.splits=true;var g=document.getElementById('mi-splits-grid');var fallback=[{symbol:'NVDA',name:'NVIDIA Corp',date:'Jun 10',ratio:'10:1'},{symbol:'SHOP',name:'Shopify Inc',date:'Jun 12',ratio:'10:1'},{symbol:'AMZN',name:'Amazon.com',date:'Jun 11',ratio:'20:1'},{symbol:'GOOGL',name:'Alphabet Inc',date:'Jun 9',ratio:'20:1'}];var html='';fallback.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · Split '+s.ratio,'SPLIT','#00b4d8');});if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No splits this week</div>';}
-function loadMIIPO(){_miLoaded.ipo=true;var g=document.getElementById('mi-ipo-grid');var fallback=[{symbol:'NEWCO',name:'NewCo Inc',date:'Jun 9',price:'$18-20/share'},{symbol:'TECHX',name:'TechX Corp',date:'Jun 11',price:'$24-26/share'},{symbol:'BIOMD',name:'BioMed Ltd',date:'Jun 12',price:'$12-14/share'}];var html='';fallback.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · '+s.price,'IPO','#9b59b6');});if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No IPOs this week</div>';}
+function loadMISplits(){_miLoaded.splits=true;var g=document.getElementById('mi-splits-grid');if(g)g.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
+  var today=new Date(),from=today.toISOString().split('T')[0],to=new Date(today.getTime()+60*86400000).toISOString().split('T')[0];
+  fetch('https://api.polygon.io/v3/reference/splits?execution_date.gte='+from+'&execution_date.lte='+to+'&limit=20&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+  .then(function(r){return r.json();}).then(function(data){
+    if(data&&data.results&&data.results.length){
+      var html='';
+      data.results.forEach(function(s){
+        var ratio=s.split_from&&s.split_to?s.split_to+':'+s.split_from:'—';
+        var d=s.execution_date?s.execution_date.replace(/\d{4}-/,'').replace('-','/'):'—';
+        html+=miTile(s.ticker,s.ticker,d+' · Split '+ratio,'SPLIT','#00b4d8');
+      });
+      if(g)g.innerHTML=html;
+    } else { loadMISplitsFallback(g); }
+  }).catch(function(){loadMISplitsFallback(g);});
+}
+function loadMISplitsFallback(g){
+  var fb=[{symbol:'NVDA',name:'NVIDIA Corp',date:'Jun 10',ratio:'10:1'},{symbol:'SHOP',name:'Shopify',date:'Jun 12',ratio:'10:1'},{symbol:'AMZN',name:'Amazon',date:'Jun 11',ratio:'20:1'},{symbol:'GOOGL',name:'Alphabet',date:'Jun 9',ratio:'20:1'},{symbol:'TSLA',name:'Tesla',date:'Jun 14',ratio:'5:1'}];
+  var html='';fb.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · Split '+s.ratio,'SPLIT','#00b4d8');});
+  if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No upcoming splits</div>';
+}
+
+function loadMIIPO(){_miLoaded.ipo=true;var g=document.getElementById('mi-ipo-grid');if(g)g.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
+  var today=new Date(),from=new Date(today.getTime()-30*86400000).toISOString().split('T')[0],to=new Date(today.getTime()+30*86400000).toISOString().split('T')[0];
+  fetch('https://api.polygon.io/v3/reference/tickers?type=CS&market=stocks&active=true&list_date.gte='+from+'&list_date.lte='+to+'&order=desc&limit=20&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+  .then(function(r){return r.json();}).then(function(data){
+    if(data&&data.results&&data.results.length){
+      var html='';
+      data.results.forEach(function(t){
+        var d=t.list_date?t.list_date.replace(/\d{4}-/,'').replace('-','/'):'—';
+        html+=miTile(t.ticker,t.name||t.ticker,'Listed: '+d,'IPO','#9b59b6');
+      });
+      if(g)g.innerHTML=html;
+    } else { loadMIIPOFallback(g); }
+  }).catch(function(){loadMIIPOFallback(g);});
+}
+function loadMIIPOFallback(g){
+  var fb=[{symbol:'NEWCO',name:'NewCo Inc',date:'Jun 9',price:'$18-20'},{symbol:'TECHX',name:'TechX Corp',date:'Jun 11',price:'$24-26'},{symbol:'BIOMD',name:'BioMed Ltd',date:'Jun 12',price:'$12-14'}];
+  var html='';fb.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · '+s.price,'IPO','#9b59b6');});
+  if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No recent IPOs</div>';
+}
+
 function loadMIEconomic(){_miLoaded.economic=true;var g=document.getElementById('mi-economic-grid');var data=[{name:'Fed Rate Decision',date:'Jun 11',impact:'HIGH',detail:'Expected: Hold at 4.25%'},{name:'US CPI Inflation',date:'Jun 10',impact:'HIGH',detail:'Est: 3.1% YoY'},{name:'US Jobs Report',date:'Jun 6',impact:'HIGH',detail:'Est: +185k jobs'},{name:'GDP Growth Q1',date:'Jun 8',impact:'MED',detail:'Est: +2.1%'},{name:'US Retail Sales',date:'Jun 12',impact:'MED',detail:'Est: +0.3%'},{name:'PPI Inflation',date:'Jun 12',impact:'MED',detail:'Est: 2.8%'}];var html='';data.forEach(function(e){var col=e.impact==='HIGH'?'#f6465d':'#f0b90b';html+='<div style="background:#131926;border:1px solid #1e2a40;border-radius:8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:8px;padding:2px 6px;border-radius:3px;background:'+col+'18;color:'+col+';border:1px solid '+col+'44;font-family:IBM Plex Mono,monospace;">'+e.impact+' IMPACT</span><span style="font-size:9px;color:#607a99;">'+e.date+'</span></div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:700;color:#d0e0f0;margin-bottom:4px;">'+e.name+'</div><div style="font-size:9px;color:#607a99;">'+e.detail+'</div></div>';});if(g)g.innerHTML=html;}
 document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
 </script>
@@ -1924,6 +2010,8 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     <button onclick="miTab('splits')" id="mi-tab-splits" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">✂️ Stock Splits</button>
     <button onclick="miTab('ipo')" id="mi-tab-ipo" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🚀 IPOs</button>
     <button onclick="miTab('economic')" id="mi-tab-economic" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🌍 Economic</button>
+    <button onclick="miTab('dividends')" id="mi-tab-dividends" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">💰 Dividends</button>
+    <button onclick="miTab('gainers')" id="mi-tab-gainers" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">📈 Gainers/Losers</button>
     <button onclick="miTab('screeners')" id="mi-tab-screeners" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🔍 Screeners</button>
   </div>
   <div id="mi-earnings">
@@ -1933,6 +2021,16 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
   <div id="mi-splits" style="display:none;"><div id="mi-splits-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div></div>
   <div id="mi-ipo" style="display:none;"><div id="mi-ipo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div></div>
   <div id="mi-economic" style="display:none;"><div id="mi-economic-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;"></div></div>
+  <div id="mi-dividends" style="display:none;">
+    <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;">Upcoming ex-dividend dates · Click any stock for AI forecast</div>
+    <div id="mi-dividends-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+  </div>
+  <div id="mi-gainers" style="display:none;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;margin-bottom:10px;letter-spacing:1px;">📈 TOP GAINERS TODAY</div>
+    <div id="mi-gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;"></div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;margin-bottom:10px;letter-spacing:1px;">📉 TOP LOSERS TODAY</div>
+    <div id="mi-losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+  </div>
   <div id="mi-screeners" style="display:none;">
     <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;">Real-time data · Click any ticker then get AI forecast above</div>
     <div style="border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
