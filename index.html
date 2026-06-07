@@ -580,9 +580,9 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 
 
 <div id="market-overview" style="background:var(--bg);padding:24px 20px 24px 20px;">
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:#0ecb81;margin-bottom:4px;letter-spacing:2px;">📊 MARKET OVERVIEW</div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:clamp(12px,2vw,16px);font-weight:700;color:#0ecb81;margin-bottom:4px;letter-spacing:2px;">📊 MARKET OVERVIEW</div>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:20px;">US market data · Click any card to run ZEUS-AI forecast</div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:24px;">
     <div class="mkt-card" onclick="loadPair('SPY')">
       <div class="mkt-card-title">S&P 500 <span style="color:#607a99;font-size:9px;">SPY</span></div>
       <div class="mkt-card-price" id="mo-sp-price">$744</div>
@@ -609,24 +609,24 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
     </div>
   </div>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:12px;letter-spacing:1px;">⚡ TOP STOCKS — Click any to get AI forecast</div>
-  <div id="stock-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;"></div>
+  <div id="stock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;"></div>
 
   <!-- MOST ACTIVE -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin:24px 0 12px;letter-spacing:1px;">⚡ MOST ACTIVE — Highest volume stocks today</div>
-  <div id="active-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px;"></div>
+  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP GAINERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;margin:24px 0 12px;letter-spacing:1px;">📈 TOP GAINERS — Best performing stocks today</div>
-  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px;"></div>
+  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP LOSERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;margin:24px 0 12px;letter-spacing:1px;">📉 TOP LOSERS — Biggest decliners today</div>
-  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:4px;"></div>
+  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
 
 
   <!-- PENNY STOCKS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;margin:24px 0 12px;letter-spacing:1px;">💰 PENNY STOCKS & SMALL CAPS — Under $10</div>
-  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:0;"></div>
+  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:0;"></div>
 
   </div>
 </div>
@@ -1969,9 +1969,9 @@ function loadMIEconomic(){_miLoaded.economic=true;var g=document.getElementById(
 document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
 </script>
 <!-- MARKET INTELLIGENCE -->
-<div style="max-width:1100px;margin:0 auto;padding:24px 16px 40px;">
+<div style="padding:24px 20px 40px;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ff;letter-spacing:1px;">📅 MARKET INTELLIGENCE</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:clamp(11px,2vw,13px);font-weight:700;color:#0ff;letter-spacing:1px;">📅 MARKET INTELLIGENCE</div>
     <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;">Click any stock → instant AI forecast</div>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
@@ -2006,7 +2006,202 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     <div style="border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
       <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}</script>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}
+// ── COMPANY PROFILE ───────────────────────────────────────────
+var _cpChart = null;
+var _cpCurrentSym = '';
+var _cpCurrentDays = 30;
+
+function fmtMktCap(v){
+  if(!v) return '—';
+  if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T';
+  if(v>=1e9)  return '$'+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6)  return '$'+(v/1e6).toFixed(2)+'M';
+  return '$'+v.toLocaleString();
+}
+function fmtShares(v){
+  if(!v) return '—';
+  if(v>=1e9) return (v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return (v/1e6).toFixed(2)+'M';
+  return v.toLocaleString();
+}
+function fmtNum(v){ return v?v.toLocaleString():'—'; }
+function setEl(id,val){ var e=document.getElementById(id); if(e) e.textContent=val||'—'; }
+
+function cpSetPeriod(btn, days){
+  _cpCurrentDays = parseInt(days);
+  document.querySelectorAll('.cp-ptab').forEach(function(b){
+    b.style.background='transparent';
+    b.style.borderColor='#1e2a40';
+    b.style.color='#607a99';
+  });
+  btn.style.background='rgba(14,203,129,0.08)';
+  btn.style.borderColor='#0ecb81';
+  btn.style.color='#0ecb81';
+  if(_cpCurrentSym) loadCPChart(_cpCurrentSym, _cpCurrentDays);
+}
+
+function loadCompanyForecast(){
+  if(!_cpCurrentSym) return;
+  window.scrollTo({top:0,behavior:'smooth'});
+  var inp = document.getElementById('pair-input');
+  if(inp) inp.value = _cpCurrentSym;
+  setTimeout(function(){ if(typeof runForecast==='function') runForecast(); }, 300);
+}
+
+async function loadCPChart(sym, days){
+  var canvas = document.getElementById('cp-chart');
+  if(!canvas) return;
+  var to = new Date();
+  var from = new Date(to.getTime() - days*24*60*60*1000);
+  var toStr = to.toISOString().split('T')[0];
+  var fromStr = from.toISOString().split('T')[0];
+  var mult = days<=7?1:1, span = days<=7?'day':'day';
+  try {
+    var r = await fetch('https://api.polygon.io/v2/aggs/ticker/'+sym+'/range/'+mult+'/'+span+'/'+fromStr+'/'+toStr+'?adjusted=true&sort=asc&limit=365&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var data = await r.json();
+    if(!data.results||!data.results.length) return;
+    var labels = data.results.map(function(d){
+      var dt = new Date(d.t);
+      return (dt.getMonth()+1)+'/'+(dt.getDate());
+    });
+    var prices = data.results.map(function(d){ return parseFloat(d.c.toFixed(2)); });
+    var isUp = prices[prices.length-1] >= prices[0];
+    var lineColor = isUp ? '#0ecb81' : '#f6465d';
+    var fillColor = isUp ? 'rgba(14,203,129,0.06)' : 'rgba(246,70,93,0.06)';
+    if(_cpChart){ try{_cpChart.destroy();}catch(e){} _cpChart=null; }
+    _cpChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: sym,
+          data: prices,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: lineColor,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0b0f1a',
+            borderColor: '#1e2a40',
+            borderWidth: 1,
+            titleColor: '#607a99',
+            bodyColor: lineColor,
+            titleFont: { family: 'IBM Plex Mono', size: 10 },
+            bodyFont: { family: 'IBM Plex Mono', size: 11 },
+            callbacks: { label: function(ctx){ return ' $'+ctx.parsed.y.toFixed(2); } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(30,42,64,0.5)' },
+            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+          },
+          y: {
+            grid: { color: 'rgba(30,42,64,0.5)' },
+            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, callback: function(v){ return '$'+v.toFixed(0); } },
+            position: 'right'
+          }
+        }
+      }
+    });
+  } catch(e) { console.log('CP chart error:', e.message); }
+}
+
+async function loadCompanyProfile(sym){
+  if(!sym) return;
+  sym = sym.toUpperCase().trim();
+  _cpCurrentSym = sym;
+  document.getElementById('cp-input').value = sym;
+  var loading = document.getElementById('cp-loading');
+  var error   = document.getElementById('cp-error');
+  var content = document.getElementById('cp-content');
+  loading.style.display='block';
+  error.style.display='none';
+  content.style.display='none';
+  // Scroll to profile section
+  var sec = document.getElementById('company-profile-section');
+  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+  try {
+    var r = await fetch('https://api.polygon.io/v3/reference/tickers/'+sym+'?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var data = await r.json();
+    if(!data.results){ throw new Error('No data for '+sym); }
+    var d = data.results;
+    var initials = sym.substring(0,2).toUpperCase();
+    var colors = ['#0ecb81','#0af','#f0b90b','#a78bfa','#f6465d','#00b4d8'];
+    var col = colors[sym.charCodeAt(0)%colors.length];
+    // Logo circles
+    ['cp-logo','cp-logo2'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.textContent=initials; el.style.color=col; el.style.borderColor=col+'44'; el.style.background=col+'12'; }
+    });
+    // Header
+    setEl('cp-sym', sym);
+    setEl('cp-fullname', d.name||sym);
+    setEl('cp-fullname2', d.name||sym);
+    setEl('cp-exchange-badge', d.primary_exchange||'');
+    setEl('cp-exchange', d.primary_exchange||'—');
+    // Market cap
+    var mc = fmtMktCap(d.market_cap);
+    setEl('cp-mktcap', mc);
+    setEl('cp-mktcap2', mc);
+    // Details
+    setEl('cp-employees', fmtNum(d.total_employees));
+    setEl('cp-employees2', fmtNum(d.total_employees));
+    var listDate = d.list_date ? new Date(d.list_date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+    setEl('cp-listed', listDate);
+    setEl('cp-listed2', listDate);
+    var shares = fmtShares(d.weighted_shares_outstanding||d.share_class_shares_outstanding);
+    setEl('cp-shares', shares);
+    setEl('cp-shares2', shares);
+    setEl('cp-industry', d.sic_description||d.type||'—');
+    setEl('cp-sic', d.sic_description||'—');
+    setEl('cp-phone', d.phone_number||'—');
+    // Website
+    var webEl = document.getElementById('cp-website');
+    if(webEl && d.homepage_url){
+      webEl.textContent = d.homepage_url.replace('https://','').replace('http://','').replace(/\/$/,'');
+      webEl.onclick = function(){ window.open(d.homepage_url,'_blank'); };
+    }
+    // Description
+    if(d.description){
+      var desc = d.description.length>280 ? d.description.substring(0,280)+'...' : d.description;
+      setEl('cp-desc', desc);
+    }
+    loading.style.display='none';
+    content.style.display='block';
+    // Load chart
+    loadCPChart(sym, _cpCurrentDays);
+  } catch(e) {
+    loading.style.display='none';
+    error.style.display='block';
+    error.textContent = 'Could not load company data for '+sym+'. Try another ticker.';
+    console.log('Company profile error:', e.message);
+  }
+}
+
+// Auto-load when user clicks a stock anywhere on page
+(function(){
+  var _origLoadPair = null;
+  window.addEventListener('DOMContentLoaded', function(){
+    setTimeout(function(){
+      loadCompanyProfile('AAPL');
+    }, 2000);
+  });
+})();
+
+</script>
       </div>
     </div>
   </div>
@@ -2035,6 +2230,150 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     </div>
   </div>
 </div>
+
+<!-- COMPANY PROFILE -->
+<div id="company-profile-section" style="background:var(--bg);padding:24px 20px 40px 20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:clamp(11px,2vw,13px);font-weight:700;color:#0ff;letter-spacing:1px;">🏢 COMPANY PROFILE</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;margin-top:3px;">Powered by Polygon.io · Click any stock above or search below</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:0 10px;height:28px;">
+        <span style="color:var(--text3);font-size:11px;">⚲</span>
+        <input type="text" id="cp-input" placeholder="e.g. AAPL, TSLA..." value="AAPL"
+          style="background:transparent;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:11px;width:130px;"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')loadCompanyProfile(this.value)">
+      </div>
+      <button onclick="loadCompanyProfile(document.getElementById('cp-input').value)"
+        style="background:var(--accent);border:none;border-radius:4px;padding:5px 14px;font-family:var(--mono);font-size:11px;font-weight:700;color:#000;cursor:pointer;">Load</button>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div id="cp-loading" style="display:none;text-align:center;padding:40px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;">
+    <div style="width:24px;height:24px;border:2px solid #1e2a40;border-top-color:#f0b90b;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div>
+    Loading company data...
+  </div>
+
+  <!-- Error state -->
+  <div id="cp-error" style="display:none;text-align:center;padding:40px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;"></div>
+
+  <!-- Main content -->
+  <div id="cp-content" style="display:none;">
+
+    <!-- Ticker header row -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+      <div id="cp-logo" style="width:44px;height:44px;border-radius:8px;background:#131926;border:1px solid #1e2a40;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:#0ecb81;flex-shrink:0;"></div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="cp-sym" style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:#d0e0f0;"></span>
+          <span id="cp-exchange-badge" style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(0,170,255,0.12);color:#0af;border:1px solid rgba(0,170,255,0.2);font-family:'IBM Plex Mono',monospace;"></span>
+        </div>
+        <div id="cp-fullname" style="font-size:12px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-top:2px;"></div>
+      </div>
+      <div style="margin-left:auto;text-align:right;">
+        <div id="cp-mktcap" style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#f0b90b;"></div>
+        <div style="font-size:9px;color:#607a99;font-family:'IBM Plex Mono',monospace;">Market Cap</div>
+      </div>
+    </div>
+
+    <!-- Main grid: chart left, details right -->
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;">
+
+      <!-- LEFT: Price chart + stat cards -->
+      <div>
+        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;letter-spacing:1px;">PRICE HISTORY</span>
+            <div style="display:flex;gap:4px;" id="cp-period-tabs">
+              <button onclick="cpSetPeriod(this,'7')"   class="cp-ptab" style="background:transparent;border:1px solid #1e2a40;border-radius:3px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;cursor:pointer;">1W</button>
+              <button onclick="cpSetPeriod(this,'30')"  class="cp-ptab active" style="background:rgba(14,203,129,0.08);border:1px solid #0ecb81;border-radius:3px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0ecb81;cursor:pointer;">1M</button>
+              <button onclick="cpSetPeriod(this,'90')"  class="cp-ptab" style="background:transparent;border:1px solid #1e2a40;border-radius:3px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;cursor:pointer;">3M</button>
+              <button onclick="cpSetPeriod(this,'365')" class="cp-ptab" style="background:transparent;border:1px solid #1e2a40;border-radius:3px;padding:2px 7px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;cursor:pointer;">1Y</button>
+            </div>
+          </div>
+          <div style="position:relative;height:200px;">
+            <canvas id="cp-chart" role="img" aria-label="Company stock price history line chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Stat cards below chart -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px;">
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px 12px;">
+            <div style="font-size:9px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">EMPLOYEES</div>
+            <div id="cp-employees" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#d0e0f0;">—</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px 12px;">
+            <div style="font-size:9px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">LISTED SINCE</div>
+            <div id="cp-listed" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#d0e0f0;">—</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px 12px;">
+            <div style="font-size:9px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">SHARES OUT</div>
+            <div id="cp-shares" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#d0e0f0;">—</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px 12px;">
+            <div style="font-size:9px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:4px;">INDUSTRY</div>
+            <div id="cp-industry" style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#d0e0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Company details card -->
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
+        <div style="background:#131926;border-bottom:1px solid #1e2a40;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+          <div id="cp-logo2" style="width:36px;height:36px;border-radius:6px;background:#0b0f1a;border:1px solid #1e2a40;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ecb81;flex-shrink:0;"></div>
+          <div>
+            <div id="cp-fullname2" style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#d0e0f0;"></div>
+            <div id="cp-website" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0af;cursor:pointer;"></div>
+          </div>
+        </div>
+        <div style="padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Exchange</span>
+            <span id="cp-exchange" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#0af;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Market Cap</span>
+            <span id="cp-mktcap2" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#f0b90b;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Industry</span>
+            <span id="cp-sic" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#d0e0f0;text-align:right;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Employees</span>
+            <span id="cp-employees2" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#d0e0f0;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Listed</span>
+            <span id="cp-listed2" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#d0e0f0;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Shares Out</span>
+            <span id="cp-shares2" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#d0e0f0;"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Phone</span>
+            <span id="cp-phone" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;"></span>
+          </div>
+          <div id="cp-desc-wrap" style="margin-top:10px;padding-top:10px;border-top:1px solid #1e2a40;">
+            <div style="font-size:9px;color:#344a66;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;margin-bottom:5px;">ABOUT</div>
+            <div id="cp-desc" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;line-height:1.7;max-height:100px;overflow:hidden;"></div>
+          </div>
+          <button onclick="loadCompanyForecast()"
+            style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#000;cursor:pointer;">
+            ▶ Run AI Forecast
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- END COMPANY PROFILE -->
+
 <!-- SOCIAL PROOF SECTION -->
 <div id="social-proof-section" style="background:#0b0f1a;border-top:1px solid #1e2a40;border-bottom:1px solid #1e2a40;padding:32px 20px;text-align:center;">
   <div style="margin-bottom:28px;">
