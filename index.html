@@ -579,7 +579,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 </div>
 
 
-<div id="market-overview" style="background:var(--bg);padding:24px 20px 120px 20px;">
+<div id="market-overview" style="background:var(--bg);padding:24px 20px 24px 20px;">
   <div style="font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:#0ecb81;margin-bottom:4px;letter-spacing:2px;">📊 MARKET OVERVIEW</div>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:20px;">US market data · Click any card to run ZEUS-AI forecast</div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
@@ -626,7 +626,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 
   <!-- PENNY STOCKS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;margin:24px 0 12px;letter-spacing:1px;">💰 PENNY STOCKS & SMALL CAPS — Under $10</div>
-  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:40px;"></div>
+  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:0;"></div>
 
   </div>
 </div>
@@ -1872,7 +1872,7 @@ function updateUpgradePrompt(){
 
 function toggleFAQ(){var c=document.getElementById('faq-content'),a=document.getElementById('faq-arrow');if(c.style.display==='none'){c.style.display='block';if(a)a.textContent='▲';}else{c.style.display='none';if(a)a.textContent='▼';}}
 var _miLoaded={earnings:false,splits:false,dividends:false,ipo:false,economic:false,gainers:false};
-function miTab(t){['earnings','splits','dividends','ipo','economic','gainers','screeners'].forEach(function(id){var el=document.getElementById('mi-'+id);if(el)el.style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='dividends'&&!_miLoaded.dividends)loadMIDividends();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();else if(t==='gainers'&&!_miLoaded.gainers)loadMIGainers();}
+function miTab(t){['earnings','splits','dividends','ipo','economic','gainers','screeners','faq'].forEach(function(id){var el=document.getElementById('mi-'+id);if(el)el.style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='dividends'&&!_miLoaded.dividends)loadMIDividends();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();else if(t==='gainers'&&!_miLoaded.gainers)loadMIGainers();}
 
 function miTile(symbol,name,detail,badge,badgeColor){var colors=['#0ecb81','#00b4d8','#f0b90b','#f6465d','#9b59b6','#e67e22'];var col=colors[symbol.charCodeAt(0)%colors.length];var init=symbol.replace('.','').substring(0,2).toUpperCase();return '<div onclick="miLoadForecast(\''+symbol+'\')" style="background:#131926;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#0ecb81\'" onmouseout="this.style.borderColor=\'#1e2a40\'">'+'<div style="height:60px;display:flex;align-items:center;justify-content:center;font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:'+col+';background:'+col+'15;">'+init+'</div>'+'<div style="padding:8px 10px;"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:#d0e0f0;margin-bottom:2px;">'+symbol+'</div><div style="font-size:9px;color:#607a99;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+(detail?'<div style="font-size:9px;color:#607a99;margin-bottom:4px;">'+detail+'</div>':'')+(badge?'<span style="font-size:8px;padding:2px 5px;border-radius:3px;background:'+badgeColor+'18;color:'+badgeColor+';border:1px solid '+badgeColor+'44;font-family:IBM Plex Mono,monospace;">'+badge+'</span>':'')+'</div></div>';}
 function miLoadForecast(symbol){window.scrollTo({top:0,behavior:'smooth'});var inp=document.getElementById('pair-input');if(inp)inp.value=symbol;setTimeout(function(){if(typeof runForecast==='function')runForecast();},400);}
@@ -1968,37 +1968,6 @@ function loadMIIPOFallback(g){
 function loadMIEconomic(){_miLoaded.economic=true;var g=document.getElementById('mi-economic-grid');var data=[{name:'Fed Rate Decision',date:'Jun 11',impact:'HIGH',detail:'Expected: Hold at 4.25%'},{name:'US CPI Inflation',date:'Jun 10',impact:'HIGH',detail:'Est: 3.1% YoY'},{name:'US Jobs Report',date:'Jun 6',impact:'HIGH',detail:'Est: +185k jobs'},{name:'GDP Growth Q1',date:'Jun 8',impact:'MED',detail:'Est: +2.1%'},{name:'US Retail Sales',date:'Jun 12',impact:'MED',detail:'Est: +0.3%'},{name:'PPI Inflation',date:'Jun 12',impact:'MED',detail:'Est: 2.8%'}];var html='';data.forEach(function(e){var col=e.impact==='HIGH'?'#f6465d':'#f0b90b';html+='<div style="background:#131926;border:1px solid #1e2a40;border-radius:8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:8px;padding:2px 6px;border-radius:3px;background:'+col+'18;color:'+col+';border:1px solid '+col+'44;font-family:IBM Plex Mono,monospace;">'+e.impact+' IMPACT</span><span style="font-size:9px;color:#607a99;">'+e.date+'</span></div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:700;color:#d0e0f0;margin-bottom:4px;">'+e.name+'</div><div style="font-size:9px;color:#607a99;">'+e.detail+'</div></div>';});if(g)g.innerHTML=html;}
 document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
 </script>
-<!-- FAQ BUTTON -->
-<div style="text-align:center;padding:16px 16px 0;">
-  <button onclick="toggleFAQ()" style="background:#131926;border:1px solid #1e2a40;border-radius:20px;padding:7px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
-    ❓ Frequently Asked Questions <span id="faq-arrow">▼</span>
-  </button>
-</div>
-<div id="faq-content" style="display:none;max-width:800px;margin:0 auto;padding:16px;">
-<div>
-  <div style="font-family:'IBM Plex Mono',monospace;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#0ff;margin-bottom:24px;text-align:center;letter-spacing:2px;">❓ FREQUENTLY ASKED QUESTIONS</div>
-  <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">Is it really free?</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Yes! You get 2 hours of free AI forecasts every day. No credit card required. After 2 hours, wait 15 minutes or upgrade to Pro for unlimited access.</div>
-  </div>
-  <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">How accurate are the forecasts?</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Our AI shows accuracy scores between 90-99%+ based on historical backtesting. Each forecast shows the exact confidence score so you can judge for yourself.</div>
-  </div>
-  <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">How do I interpret the forecast?</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Join our Trader Community on Slack! We share screenshots and guidance on how to read BULL/BEAR signals and identify buy/sell setups. <span onclick="document.getElementById('community-modal').classList.remove('hidden')" style="color:#a78bfa;cursor:pointer;">Join here →</span></div>
-  </div>
-  <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">Is this financial advice?</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">No. This is AI-powered analysis as a decision-support tool. Always do your own research before making any investment decisions.</div>
-  </div>
-  <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">Can I cancel anytime?</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Yes! Cancel anytime with no questions asked. Monthly subscription, stop at any time. No long-term commitment required.</div>
-  </div>
-</div>
-</div>
 <!-- MARKET INTELLIGENCE -->
 <div style="max-width:1100px;margin:0 auto;padding:24px 16px 40px;">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
@@ -2013,6 +1982,7 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     <button onclick="miTab('dividends')" id="mi-tab-dividends" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">💰 Dividends</button>
     <button onclick="miTab('gainers')" id="mi-tab-gainers" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">📈 Gainers/Losers</button>
     <button onclick="miTab('screeners')" id="mi-tab-screeners" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🔍 Screeners</button>
+    <button onclick="miTab('faq')" id="mi-tab-faq" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">❓ FAQ</button>
   </div>
   <div id="mi-earnings">
     <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;" id="mi-earnings-label">Loading this week's earnings...</div>
@@ -2037,6 +2007,30 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
       <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}</script>
+      </div>
+    </div>
+  </div>
+  <div id="mi-faq" style="display:none;">
+    <div style="max-width:800px;">
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#f0b90b;margin-bottom:6px;">Is it really free?</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Yes! You get 2 hours of free AI forecasts every day. No credit card required. After 2 hours, wait 15 minutes or upgrade to Pro for unlimited access.</div>
+      </div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#f0b90b;margin-bottom:6px;">How accurate are the forecasts?</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Our AI shows 90–99%+ accuracy scores based on historical backtesting. Each forecast shows the exact confidence score so you can judge for yourself.</div>
+      </div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#f0b90b;margin-bottom:6px;">How do I interpret the forecast?</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Join our Trader Community on Slack! We share screenshots and guidance on how to read BULL/BEAR signals and identify buy/sell setups. <span onclick="document.getElementById('community-modal').classList.remove('hidden')" style="color:#a78bfa;cursor:pointer;">Join here →</span></div>
+      </div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#f0b90b;margin-bottom:6px;">Is this financial advice?</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">No. This is AI-powered analysis as a decision-support tool. Always do your own research before making any investment decisions.</div>
+      </div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#f0b90b;margin-bottom:6px;">Can I cancel anytime?</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Yes! Cancel anytime with no questions asked. Monthly subscription, stop at any time. No long-term commitment required.</div>
       </div>
     </div>
   </div>
