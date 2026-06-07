@@ -1416,36 +1416,54 @@ async function renderAllStockGrids(){
   var symbols=['NVDA','AAPL','TSLA','AMD','META','MSFT','GOOGL','AMZN',
                'NFLX','COIN','HOOD','UBER','GME','AMC','BB','PTON','NIO','MSTR','PLTR','SOFI'];
   var stocks=[];
-  try{
-    var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US&corsDomain=finance.yahoo.com';
-    var resp=await fetch(url,{mode:'cors'});
-    var data=await resp.json();
-    var quotes=data&&data.quoteResponse&&data.quoteResponse.result;
-    if(quotes&&quotes.length>0){
-      stocks=quotes.map(function(q){return{symbol:q.symbol,price:q.regularMarketPrice||0,changesPercentage:q.regularMarketChangePercent||0,volume:q.regularMarketVolume||0};}).filter(function(s){return s.price>0;});
-      console.log('Live stock prices: '+stocks.length+' from Yahoo Finance');
+
+  // Try multiple sources
+  async function tryYahoo(){
+    var urls=[
+      'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US',
+      'https://query2.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US',
+    ];
+    for(var i=0;i<urls.length;i++){
+      try{
+        var resp=await fetch(urls[i],{mode:'cors',headers:{'Accept':'application/json'}});
+        var data=await resp.json();
+        var quotes=data&&data.quoteResponse&&data.quoteResponse.result;
+        if(quotes&&quotes.length>0){
+          return quotes.map(function(q){return{symbol:q.symbol,price:q.regularMarketPrice||0,changesPercentage:q.regularMarketChangePercent||0,volume:q.regularMarketVolume||0};}).filter(function(s){return s.price>0;});
+        }
+      }catch(e){console.log('Yahoo source '+i+' failed:',e.message);}
     }
-  }catch(e){console.log('Yahoo Finance failed:',e.message);}
-  if(!stocks.length){stocks=[
-    {symbol:'NVDA',price:215.33,changesPercentage:-1.9,volume:169339208},
-    {symbol:'AAPL',price:308.82,changesPercentage:1.26,volume:43669609},
-    {symbol:'TSLA',price:426.01,changesPercentage:1.95,volume:46104415},
-    {symbol:'AMD',price:467.51,changesPercentage:3.99,volume:34759930},
-    {symbol:'META',price:607.1,changesPercentage:-0.38,volume:15000000},
-    {symbol:'MSFT',price:418.2,changesPercentage:0.15,volume:22000000},
-    {symbol:'GOOGL',price:389.2,changesPercentage:-1.21,volume:20444813},
-    {symbol:'AMZN',price:266.32,changesPercentage:-0.8,volume:27540521},
-    {symbol:'NFLX',price:88.6,changesPercentage:-0.78,volume:23847196},
-    {symbol:'COIN',price:184.99,changesPercentage:-4.43,volume:7927507},
-    {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},
-    {symbol:'UBER',price:71.82,changesPercentage:-2.43,volume:19688917},
-    {symbol:'GME',price:21.96,changesPercentage:-2.36,volume:5279748},
-    {symbol:'AMC',price:1.51,changesPercentage:-3.21,volume:20258044},
-    {symbol:'BB',price:7.91,changesPercentage:18.95,volume:57770209},
-    {symbol:'PTON',price:5.71,changesPercentage:10.23,volume:34901844},
-    {symbol:'NIO',price:5.2,changesPercentage:-7.14,volume:87983830},
-    {symbol:'MSTR',price:1250.0,changesPercentage:4.50,volume:6000000},
-  ];}
+    return [];
+  }
+
+  try{ stocks=await tryYahoo(); }catch(e){}
+
+  // If all APIs fail use static fallback
+  if(!stocks.length){
+    console.log('Using static fallback data');
+    stocks=[
+      {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},
+      {symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
+      {symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},
+      {symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
+      {symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},
+      {symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},
+      {symbol:'GOOGL',price:175.85,changesPercentage:-0.6,volume:20444813},
+      {symbol:'AMZN',price:201.32,changesPercentage:0.5,volume:27540521},
+      {symbol:'NFLX',price:1285.40,changesPercentage:1.8,volume:4847196},
+      {symbol:'COIN',price:248.15,changesPercentage:-2.1,volume:7927507},
+      {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},
+      {symbol:'UBER',price:88.22,changesPercentage:1.4,volume:19688917},
+      {symbol:'GME',price:21.96,changesPercentage:-2.4,volume:5279748},
+      {symbol:'AMC',price:2.51,changesPercentage:-3.2,volume:20258044},
+      {symbol:'BB',price:3.91,changesPercentage:4.5,volume:12770209},
+      {symbol:'PTON',price:5.71,changesPercentage:2.3,volume:8901844},
+      {symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
+      {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},
+      {symbol:'SOFI',price:14.25,changesPercentage:1.8,volume:32000000},
+      {symbol:'MSTR',price:389.50,changesPercentage:2.1,volume:6000000},
+    ];
+  }
 
   var active=staticStocks.slice().sort(function(a,b){return b.volume-a.volume;});
   var gainers=staticStocks.slice().filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
@@ -1521,8 +1539,8 @@ window.addEventListener('DOMContentLoaded',function(){
   document.getElementById('pair-input').value='AAPL';
   setTimeout(function(){runForecast(true);},1500);
   setTimeout(renderStockGrid,500);
-  setTimeout(renderAllStockGrids,500);
-  setInterval(renderAllStockGrids,120000);
+  setTimeout(function(){renderAllStockGrids().catch(function(e){console.log("Grid error:",e);});},500);
+  setInterval(function(){renderAllStockGrids().catch(function(e){console.log("Grid error:",e);});},120000);
   setTimeout(drawMiniCharts,800);
   window.addEventListener('resize',drawMiniCharts);
 });
