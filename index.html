@@ -1257,33 +1257,26 @@ function fillMarketTable(tbodyId,list){
 }
 async function fetchLiveMarkets(){
   try{
-    var r=await fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/gainers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
-    var gdata=await r.json();
-    var r2=await fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/losers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
-    var ldata=await r2.json();
-    if(gdata&&gdata.tickers&&gdata.tickers.length){
-      var gainers=gdata.tickers.map(function(t){return{symbol:t.ticker,price:t.day&&t.day.c||0,changesPercentage:t.todaysChangePerc||0,volume:t.day&&t.day.v||0};});
-      var losers=ldata.tickers?ldata.tickers.map(function(t){return{symbol:t.ticker,price:t.day&&t.day.c||0,changesPercentage:t.todaysChangePerc||0,volume:t.day&&t.day.v||0};}):[];
-      var all=[...gainers,...losers];var seen=new Set();
-      var active=all.filter(function(s){if(seen.has(s.symbol))return false;seen.add(s.symbol);return true;}).sort(function(a,b){return b.volume-a.volume;});
-      var trending=all.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
-      fillMarketTable('tbl-active',active);fillMarketTable('tbl-gainers',gainers);fillMarketTable('tbl-losers',losers);fillMarketTable('tbl-trending',trending);
+    var resp=await fetch(API_BASE+'/movers');
+    var data=await resp.json();
+    if(data&&data.active&&data.active.length){
+      fillMarketTable('tbl-active',data.active||[]);
+      fillMarketTable('tbl-gainers',data.gainers||[]);
+      fillMarketTable('tbl-losers',data.losers||[]);
+      var all=[...(data.active||[]),...(data.gainers||[]),...(data.losers||[])];
+      var seen=new Set();
+      var trending=all.filter(function(s){if(seen.has(s.symbol))return false;seen.add(s.symbol);return true;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
+      fillMarketTable('tbl-trending',trending);
       return;
     }
-  }catch(e){console.log('Polygon markets failed:',e.message);}
-  // Fallback: Yahoo Finance via Railway
-  try{
-    var resp=await fetch(API_BASE+'/movers');var data=await resp.json();
-    if(data&&data.active&&data.active.length){
-      fillMarketTable('tbl-active',data.active||[]);fillMarketTable('tbl-gainers',data.gainers||[]);
-      fillMarketTable('tbl-losers',data.losers||[]);
-      var all2=[...(data.active||[]),...(data.gainers||[]),...(data.losers||[])];
-      var seen2=new Set();var trending2=all2.filter(function(s){if(seen2.has(s.symbol))return false;seen2.add(s.symbol);return true;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
-      fillMarketTable('tbl-trending',trending2);return;
-    }
-  }catch(e){console.log('Railway movers failed:',e.message);}
+  }catch(e){console.log('Markets failed:',e.message);}
   // Static fallback
-  var stocks=[{symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},{symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},{symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},{symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},{symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},{symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},{symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},{symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830}];
+  var stocks=[
+    {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},{symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
+    {symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},{symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
+    {symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},{symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},
+    {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},{symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
+  ];
   fillMarketTable('tbl-active',stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
   fillMarketTable('tbl-gainers',stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
   fillMarketTable('tbl-losers',stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
@@ -2093,28 +2086,30 @@ function loadMIGainers(){_miLoaded.gainers=true;
   var gg=document.getElementById('mi-gainers-grid'),lg=document.getElementById('mi-losers-grid');
   if(gg)gg.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
   if(lg)lg.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
-  fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/gainers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
-  .then(function(r){return r.json();}).then(function(data){
-    if(data&&data.tickers&&data.tickers.length){
-      var html='';
-      data.tickers.slice(0,18).forEach(function(t){
-        var chg=t.todaysChangePerc||0,price=t.day&&t.day.c||t.prevDay&&t.prevDay.c||0;
-        html+=miTile(t.ticker,t.ticker,'$'+parseFloat(price).toFixed(2),(chg>=0?'+':'')+parseFloat(chg).toFixed(2)+'%','#0ecb81');
+  // Use Railway /movers (Yahoo Finance) - already working
+  fetch(API_BASE+'/movers')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data&&data.gainers&&data.gainers.length){
+      var gh='';
+      data.gainers.slice(0,18).forEach(function(s){
+        gh+=miTile(s.symbol,s.symbol,'$'+parseFloat(s.price).toFixed(2)+' · '+(s.changesPercentage>=0?'+':'')+parseFloat(s.changesPercentage).toFixed(2)+'%','GAIN','#0ecb81');
       });
-      if(gg)gg.innerHTML=html;
-    }
-  }).catch(function(){if(gg)gg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load gainers</div>';});
-  fetch('https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/losers?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
-  .then(function(r){return r.json();}).then(function(data){
-    if(data&&data.tickers&&data.tickers.length){
-      var html='';
-      data.tickers.slice(0,18).forEach(function(t){
-        var chg=t.todaysChangePerc||0,price=t.day&&t.day.c||t.prevDay&&t.prevDay.c||0;
-        html+=miTile(t.ticker,t.ticker,'$'+parseFloat(price).toFixed(2),(chg>=0?'+':'')+parseFloat(chg).toFixed(2)+'%','#f6465d');
+      if(gg)gg.innerHTML=gh;
+      var lh='';
+      data.losers.slice(0,18).forEach(function(s){
+        lh+=miTile(s.symbol,s.symbol,'$'+parseFloat(s.price).toFixed(2)+' · '+(s.changesPercentage>=0?'+':'')+parseFloat(s.changesPercentage).toFixed(2)+'%','LOSS','#f6465d');
       });
-      if(lg)lg.innerHTML=html;
+      if(lg)lg.innerHTML=lh;
+    } else {
+      if(gg)gg.innerHTML='<div style="color:#607a99;padding:12px;">No data available</div>';
+      if(lg)lg.innerHTML='<div style="color:#607a99;padding:12px;">No data available</div>';
     }
-  }).catch(function(){if(lg)lg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load losers</div>';});
+  }).catch(function(e){
+    console.log('Gainers failed:',e.message);
+    if(gg)gg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load gainers</div>';
+    if(lg)lg.innerHTML='<div style="color:#607a99;padding:12px;">Could not load losers</div>';
+  });
 }
 
 function loadMIEarnings(){_miLoaded.earnings=true;var label=document.getElementById('mi-earnings-label');var grid=document.getElementById('mi-earnings-grid');var today=new Date();var from=today.toISOString().split('T')[0];var to=new Date(today.getTime()+7*86400000).toISOString().split('T')[0];fetch('https://financialmodelingprep.com/api/v3/earning_calendar?from='+from+'&to='+to+'&apikey=demo',{mode:'cors'}).then(function(r){return r.json();}).then(function(data){if(data&&data.length){if(label)label.textContent='This week · '+data.length+' companies reporting';var html='';data.slice(0,20).forEach(function(e){var d=e.date?e.date.split('T')[0].replace(/\d{4}-/,'').replace('-','/'):'';var eps=e.epsEstimated?'EPS est: $'+parseFloat(e.epsEstimated).toFixed(2):'';html+=miTile(e.symbol,e.name||e.symbol,d+' · '+eps,'EARNINGS','#f0b90b');});if(grid)grid.innerHTML=html;}else{loadMIEarningsFallback(label,grid);}}).catch(function(){loadMIEarningsFallback(label,grid);});}
