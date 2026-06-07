@@ -1862,9 +1862,11 @@ function saveTrackRecord(symbol, interval, signalName, lastClose, forecastTarget
 
 function renderTrackRecord(){
   var list = document.getElementById('record-list');
-  if(!list) return;
+  var mainBox = document.getElementById('record-list-main');
+  var empty = '<div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>';
   if(_trackRecords.length === 0){
-    list.innerHTML = '<div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>';
+    if(list) list.innerHTML = empty;
+    if(mainBox) mainBox.innerHTML = empty;
     return;
   }
   var wins = _trackRecords.filter(function(r){return r.result==='WIN';}).length;
@@ -1897,9 +1899,7 @@ function renderTrackRecord(){
     html += '<div style="font-size:9px;font-weight:700;color:'+resColor+';">'+resText+'</div>';
     html += '</div>';
   });
-  list.innerHTML = html;
-  // Sync directly to main signal box
-  var mainBox = document.getElementById('record-list-main');
+  if(list) list.innerHTML = html;
   if(mainBox) mainBox.innerHTML = html;
 }
 
