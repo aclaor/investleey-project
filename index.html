@@ -558,29 +558,30 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 
   <!-- Signal Panel -->
   <div id="stab-signal-panel">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;align-items:center;">
-      <!-- Direction -->
+    <div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr 2fr;gap:10px;align-items:center;">
+      <!-- Direction Badge -->
       <div style="text-align:center;">
-        <div id="sig-direction" style="font-family:var(--mono);font-size:20px;font-weight:700;padding:12px 16px;border-radius:8px;display:inline-block;border:2px solid #1e2a40;background:#0b0f1a;min-width:140px;">—</div>
-        <div style="font-size:9px;color:#607a99;letter-spacing:2px;margin-top:6px;">FORECAST DIRECTION</div>
+        <div id="sig-direction" style="font-family:var(--mono);font-size:15px;font-weight:700;padding:8px 14px;border-radius:6px;display:inline-block;border:2px solid #1e2a40;background:#0b0f1a;white-space:nowrap;">— NEUTRAL</div>
+        <div style="font-size:9px;color:#607a99;letter-spacing:1px;margin-top:4px;">DIRECTION</div>
       </div>
       <!-- Confidence -->
-      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:14px;text-align:center;">
-        <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:6px;letter-spacing:1px;">CONFIDENCE</div>
-        <div id="sig-conf" style="font-family:var(--mono);font-size:22px;font-weight:700;color:#0ecb81;">—</div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:4px;letter-spacing:1px;">CONFIDENCE</div>
+        <div id="sig-conf" style="font-family:var(--mono);font-size:16px;font-weight:700;color:#0ecb81;">—</div>
       </div>
       <!-- Target Price -->
-      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:14px;text-align:center;">
-        <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:6px;letter-spacing:1px;">AI TARGET PRICE</div>
-        <div id="sig-target" style="font-family:var(--mono);font-size:22px;font-weight:700;color:#f0b90b;">—</div>
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:4px;letter-spacing:1px;">AI TARGET</div>
+        <div id="sig-target" style="font-family:var(--mono);font-size:16px;font-weight:700;color:#f0b90b;">—</div>
       </div>
-      <!-- Timeframe + Advice -->
-      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:14px;">
-        <div style="text-align:center;margin-bottom:8px;">
-          <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:4px;letter-spacing:1px;">TIMEFRAME</div>
-          <div id="sig-interval" style="font-family:var(--mono);font-size:18px;font-weight:700;color:#0af;">—</div>
-        </div>
-        <div id="sig-advice" style="font-size:9px;color:#607a99;text-align:center;line-height:1.7;font-family:var(--mono);">Run a forecast to see your signal</div>
+      <!-- Timeframe -->
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:#607a99;font-family:var(--mono);margin-bottom:4px;letter-spacing:1px;">TIMEFRAME</div>
+        <div id="sig-interval" style="font-family:var(--mono);font-size:16px;font-weight:700;color:#0af;">—</div>
+      </div>
+      <!-- Advice -->
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:10px;">
+        <div id="sig-advice" style="font-size:10px;color:#607a99;line-height:1.7;font-family:var(--mono);">Run a forecast to see your AI signal</div>
       </div>
     </div>
   </div>
@@ -1752,26 +1753,11 @@ function switchSTab(tab){
     if(rp) rp.style.display='block';
     if(sb){sb.style.borderBottomColor='transparent';sb.style.color='var(--text2)';}
     if(rb){rb.style.borderBottomColor='var(--accent)';rb.style.color='var(--accent)';}
-    // Sync record list
-    var src = document.getElementById('record-list');
-    var dst = document.getElementById('record-list-main');
-    if(src && dst) dst.innerHTML = src.innerHTML;
+    // Re-render track record directly into main box
+    renderTrackRecord();
   }
 }
-// Override renderTrackRecord to also update main box
-var _origRenderTrackRecord = null;
-window.addEventListener('DOMContentLoaded', function(){
-  setTimeout(function(){
-    _origRenderTrackRecord = renderTrackRecord;
-    renderTrackRecord = function(){
-      _origRenderTrackRecord();
-      // Sync to main box too
-      var src = document.getElementById('record-list');
-      var dst = document.getElementById('record-list-main');
-      if(src && dst) dst.innerHTML = src.innerHTML;
-    };
-  }, 500);
-});
+// Track record synced directly in renderTrackRecord
 
 window.addEventListener('DOMContentLoaded',function(){
   fetchLiveTicker();
@@ -1912,6 +1898,9 @@ function renderTrackRecord(){
     html += '</div>';
   });
   list.innerHTML = html;
+  // Sync directly to main signal box
+  var mainBox = document.getElementById('record-list-main');
+  if(mainBox) mainBox.innerHTML = html;
 }
 
 document.addEventListener('click', function(e){
