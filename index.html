@@ -574,10 +574,14 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
       <button onclick="setQuote(this,'ETFS')" class="qtab2">ETFs</button>
     </div>
     <div class="pairs-cols"><span>Symbol</span><span>Price</span><span>Change</span></div>
-    <div class="pairs-list" id="pairs-list"></div>
+    <div class="pairs-list" id="pairs-list" style="overflow-y:auto;flex:1;"></div>
   </div>
 </div>
 
+
+
+<!-- SECTION DIVIDER -->
+<div style="border-top:1px solid var(--border);margin:0;"></div>
 
 <div id="market-overview" style="background:var(--bg);padding:24px 20px 24px 20px;">
   <div style="font-family:'IBM Plex Mono',monospace;font-size:clamp(12px,2vw,16px);font-weight:700;color:#0ecb81;margin-bottom:4px;letter-spacing:2px;">📊 MARKET OVERVIEW</div>
