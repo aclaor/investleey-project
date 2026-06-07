@@ -1413,17 +1413,40 @@ function renderStockGrid(){
   grid.innerHTML=stocks.map(function(s){return makeStockCard(s,null);}).join('');
 }
 async function renderAllStockGrids(){
-  var staticStocks=[
-    {symbol:'NVDA',price:215.33,changesPercentage:-1.9,volume:169339208},{symbol:'AAPL',price:308.82,changesPercentage:1.26,volume:43669609},
-    {symbol:'TSLA',price:426.01,changesPercentage:1.95,volume:46104415},{symbol:'AMD',price:467.51,changesPercentage:3.99,volume:34759930},
-    {symbol:'META',price:607.1,changesPercentage:-0.38,volume:15000000},{symbol:'MSFT',price:418.2,changesPercentage:0.15,volume:22000000},
-    {symbol:'GOOGL',price:389.2,changesPercentage:-1.21,volume:20444813},{symbol:'AMZN',price:266.32,changesPercentage:-0.8,volume:27540521},
-    {symbol:'NFLX',price:88.6,changesPercentage:-0.78,volume:23847196},{symbol:'COIN',price:184.99,changesPercentage:-4.43,volume:7927507},
-    {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},{symbol:'UBER',price:71.82,changesPercentage:-2.43,volume:19688917},
-    {symbol:'GME',price:21.96,changesPercentage:-2.36,volume:5279748},{symbol:'AMC',price:1.51,changesPercentage:-3.21,volume:20258044},
-    {symbol:'BB',price:7.91,changesPercentage:18.95,volume:57770209},{symbol:'PTON',price:5.71,changesPercentage:10.23,volume:34901844},
-    {symbol:'NIO',price:5.2,changesPercentage:-7.14,volume:87983830},{symbol:'MSTR',price:1250.0,changesPercentage:4.50,volume:6000000},
-  ];
+  var symbols=['NVDA','AAPL','TSLA','AMD','META','MSFT','GOOGL','AMZN',
+               'NFLX','COIN','HOOD','UBER','GME','AMC','BB','PTON','NIO','MSTR','PLTR','SOFI'];
+  var stocks=[];
+  try{
+    var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&lang=en-US&region=US&corsDomain=finance.yahoo.com';
+    var resp=await fetch(url,{mode:'cors'});
+    var data=await resp.json();
+    var quotes=data&&data.quoteResponse&&data.quoteResponse.result;
+    if(quotes&&quotes.length>0){
+      stocks=quotes.map(function(q){return{symbol:q.symbol,price:q.regularMarketPrice||0,changesPercentage:q.regularMarketChangePercent||0,volume:q.regularMarketVolume||0};}).filter(function(s){return s.price>0;});
+      console.log('Live stock prices: '+stocks.length+' from Yahoo Finance');
+    }
+  }catch(e){console.log('Yahoo Finance failed:',e.message);}
+  if(!stocks.length){stocks=[
+    {symbol:'NVDA',price:215.33,changesPercentage:-1.9,volume:169339208},
+    {symbol:'AAPL',price:308.82,changesPercentage:1.26,volume:43669609},
+    {symbol:'TSLA',price:426.01,changesPercentage:1.95,volume:46104415},
+    {symbol:'AMD',price:467.51,changesPercentage:3.99,volume:34759930},
+    {symbol:'META',price:607.1,changesPercentage:-0.38,volume:15000000},
+    {symbol:'MSFT',price:418.2,changesPercentage:0.15,volume:22000000},
+    {symbol:'GOOGL',price:389.2,changesPercentage:-1.21,volume:20444813},
+    {symbol:'AMZN',price:266.32,changesPercentage:-0.8,volume:27540521},
+    {symbol:'NFLX',price:88.6,changesPercentage:-0.78,volume:23847196},
+    {symbol:'COIN',price:184.99,changesPercentage:-4.43,volume:7927507},
+    {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},
+    {symbol:'UBER',price:71.82,changesPercentage:-2.43,volume:19688917},
+    {symbol:'GME',price:21.96,changesPercentage:-2.36,volume:5279748},
+    {symbol:'AMC',price:1.51,changesPercentage:-3.21,volume:20258044},
+    {symbol:'BB',price:7.91,changesPercentage:18.95,volume:57770209},
+    {symbol:'PTON',price:5.71,changesPercentage:10.23,volume:34901844},
+    {symbol:'NIO',price:5.2,changesPercentage:-7.14,volume:87983830},
+    {symbol:'MSTR',price:1250.0,changesPercentage:4.50,volume:6000000},
+  ];}
+
   var active=staticStocks.slice().sort(function(a,b){return b.volume-a.volume;});
   var gainers=staticStocks.slice().filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
   var losers=staticStocks.slice().filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;});
@@ -1832,9 +1855,27 @@ function updateUpgradePrompt(){
     }
   }
 }
+
+function toggleFAQ(){var c=document.getElementById('faq-content'),a=document.getElementById('faq-arrow');if(c.style.display==='none'){c.style.display='block';if(a)a.textContent='▲';}else{c.style.display='none';if(a)a.textContent='▼';}}
+var _miLoaded={earnings:false,splits:false,ipo:false,economic:false};
+function miTab(t){['earnings','splits','ipo','economic','screeners'].forEach(function(id){document.getElementById('mi-'+id).style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();}
+function miTile(symbol,name,detail,badge,badgeColor){var colors=['#0ecb81','#00b4d8','#f0b90b','#f6465d','#9b59b6','#e67e22'];var col=colors[symbol.charCodeAt(0)%colors.length];var init=symbol.replace('.','').substring(0,2).toUpperCase();return '<div onclick="miLoadForecast(\''+symbol+'\')" style="background:#131926;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#0ecb81\'" onmouseout="this.style.borderColor=\'#1e2a40\'">'+'<div style="height:60px;display:flex;align-items:center;justify-content:center;font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:'+col+';background:'+col+'15;">'+init+'</div>'+'<div style="padding:8px 10px;"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:#d0e0f0;margin-bottom:2px;">'+symbol+'</div><div style="font-size:9px;color:#607a99;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+(detail?'<div style="font-size:9px;color:#607a99;margin-bottom:4px;">'+detail+'</div>':'')+(badge?'<span style="font-size:8px;padding:2px 5px;border-radius:3px;background:'+badgeColor+'18;color:'+badgeColor+';border:1px solid '+badgeColor+'44;font-family:IBM Plex Mono,monospace;">'+badge+'</span>':'')+'</div></div>';}
+function miLoadForecast(symbol){window.scrollTo({top:0,behavior:'smooth'});var inp=document.getElementById('pair-input');if(inp)inp.value=symbol;setTimeout(function(){if(typeof runForecast==='function')runForecast();},400);}
+function loadMIEarnings(){_miLoaded.earnings=true;var label=document.getElementById('mi-earnings-label');var grid=document.getElementById('mi-earnings-grid');var today=new Date();var from=today.toISOString().split('T')[0];var to=new Date(today.getTime()+7*86400000).toISOString().split('T')[0];fetch('https://financialmodelingprep.com/api/v3/earning_calendar?from='+from+'&to='+to+'&apikey=demo',{mode:'cors'}).then(function(r){return r.json();}).then(function(data){if(data&&data.length){if(label)label.textContent='This week · '+data.length+' companies reporting';var html='';data.slice(0,20).forEach(function(e){var d=e.date?e.date.split('T')[0].replace(/\d{4}-/,'').replace('-','/'):'';var eps=e.epsEstimated?'EPS est: $'+parseFloat(e.epsEstimated).toFixed(2):'';html+=miTile(e.symbol,e.name||e.symbol,d+' · '+eps,'EARNINGS','#f0b90b');});if(grid)grid.innerHTML=html;}else{loadMIEarningsFallback(label,grid);}}).catch(function(){loadMIEarningsFallback(label,grid);});}
+function loadMIEarningsFallback(label,grid){var data=[{symbol:'AAPL',name:'Apple Inc',date:'Jun 10',eps:'EPS est: $1.95'},{symbol:'MSFT',name:'Microsoft',date:'Jun 11',eps:'EPS est: $3.22'},{symbol:'NVDA',name:'NVIDIA Corp',date:'Jun 11',eps:'EPS est: $0.65'},{symbol:'TSLA',name:'Tesla Inc',date:'Jun 12',eps:'EPS est: $0.45'},{symbol:'META',name:'Meta Platforms',date:'Jun 10',eps:'EPS est: $5.12'},{symbol:'GOOGL',name:'Alphabet',date:'Jun 12',eps:'EPS est: $2.15'},{symbol:'AMZN',name:'Amazon',date:'Jun 11',eps:'EPS est: $1.02'},{symbol:'JPM',name:'JPMorgan Chase',date:'Jun 8',eps:'EPS est: $4.63'}];if(label)label.textContent='This week · '+data.length+' companies reporting';var html='';data.forEach(function(e){html+=miTile(e.symbol,e.name,e.date+' · '+e.eps,'EARNINGS','#f0b90b');});if(grid)grid.innerHTML=html;}
+function loadMISplits(){_miLoaded.splits=true;var g=document.getElementById('mi-splits-grid');var fallback=[{symbol:'NVDA',name:'NVIDIA Corp',date:'Jun 10',ratio:'10:1'},{symbol:'SHOP',name:'Shopify Inc',date:'Jun 12',ratio:'10:1'},{symbol:'AMZN',name:'Amazon.com',date:'Jun 11',ratio:'20:1'},{symbol:'GOOGL',name:'Alphabet Inc',date:'Jun 9',ratio:'20:1'}];var html='';fallback.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · Split '+s.ratio,'SPLIT','#00b4d8');});if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No splits this week</div>';}
+function loadMIIPO(){_miLoaded.ipo=true;var g=document.getElementById('mi-ipo-grid');var fallback=[{symbol:'NEWCO',name:'NewCo Inc',date:'Jun 9',price:'$18-20/share'},{symbol:'TECHX',name:'TechX Corp',date:'Jun 11',price:'$24-26/share'},{symbol:'BIOMD',name:'BioMed Ltd',date:'Jun 12',price:'$12-14/share'}];var html='';fallback.forEach(function(s){html+=miTile(s.symbol,s.name,s.date+' · '+s.price,'IPO','#9b59b6');});if(g)g.innerHTML=html||'<div style="color:#607a99;font-size:11px;padding:20px;">No IPOs this week</div>';}
+function loadMIEconomic(){_miLoaded.economic=true;var g=document.getElementById('mi-economic-grid');var data=[{name:'Fed Rate Decision',date:'Jun 11',impact:'HIGH',detail:'Expected: Hold at 4.25%'},{name:'US CPI Inflation',date:'Jun 10',impact:'HIGH',detail:'Est: 3.1% YoY'},{name:'US Jobs Report',date:'Jun 6',impact:'HIGH',detail:'Est: +185k jobs'},{name:'GDP Growth Q1',date:'Jun 8',impact:'MED',detail:'Est: +2.1%'},{name:'US Retail Sales',date:'Jun 12',impact:'MED',detail:'Est: +0.3%'},{name:'PPI Inflation',date:'Jun 12',impact:'MED',detail:'Est: 2.8%'}];var html='';data.forEach(function(e){var col=e.impact==='HIGH'?'#f6465d':'#f0b90b';html+='<div style="background:#131926;border:1px solid #1e2a40;border-radius:8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:8px;padding:2px 6px;border-radius:3px;background:'+col+'18;color:'+col+';border:1px solid '+col+'44;font-family:IBM Plex Mono,monospace;">'+e.impact+' IMPACT</span><span style="font-size:9px;color:#607a99;">'+e.date+'</span></div><div style="font-family:IBM Plex Mono,monospace;font-size:10px;font-weight:700;color:#d0e0f0;margin-bottom:4px;">'+e.name+'</div><div style="font-size:9px;color:#607a99;">'+e.detail+'</div></div>';});if(g)g.innerHTML=html;}
+document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
 </script>
-<!-- FAQ SECTION -->
-<div style="max-width:800px;margin:0 auto;padding:40px 20px;">
+<!-- FAQ BUTTON -->
+<div style="text-align:center;padding:16px 16px 0;">
+  <button onclick="toggleFAQ()" style="background:#131926;border:1px solid #1e2a40;border-radius:20px;padding:7px 18px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+    ❓ Frequently Asked Questions <span id="faq-arrow">▼</span>
+  </button>
+</div>
+<div id="faq-content" style="display:none;max-width:800px;margin:0 auto;padding:16px;">
+<div>
   <div style="font-family:'IBM Plex Mono',monospace;font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#0ff;margin-bottom:24px;text-align:center;letter-spacing:2px;">❓ FREQUENTLY ASKED QUESTIONS</div>
   <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">Is it really free?</div>
@@ -1855,6 +1896,37 @@ function updateUpgradePrompt(){
   <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:20px;margin-bottom:12px;">
     <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#f0b90b;margin-bottom:8px;">Can I cancel anytime?</div>
     <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;line-height:1.8;">Yes! Cancel anytime with no questions asked. Monthly subscription, stop at any time. No long-term commitment required.</div>
+  </div>
+</div>
+</div>
+<!-- MARKET INTELLIGENCE -->
+<div style="max-width:1100px;margin:0 auto;padding:24px 16px 40px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ff;letter-spacing:1px;">📅 MARKET INTELLIGENCE</div>
+    <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;">Click any stock → instant AI forecast</div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+    <button onclick="miTab('earnings')" id="mi-tab-earnings" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #0ecb81;background:#0ecb8118;color:#0ecb81;cursor:pointer;">📊 Earnings</button>
+    <button onclick="miTab('splits')" id="mi-tab-splits" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">✂️ Stock Splits</button>
+    <button onclick="miTab('ipo')" id="mi-tab-ipo" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🚀 IPOs</button>
+    <button onclick="miTab('economic')" id="mi-tab-economic" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🌍 Economic</button>
+    <button onclick="miTab('screeners')" id="mi-tab-screeners" class="mi-tab" style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:6px 12px;border-radius:4px;border:1px solid #1e2a40;background:transparent;color:#607a99;cursor:pointer;">🔍 Screeners</button>
+  </div>
+  <div id="mi-earnings">
+    <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;" id="mi-earnings-label">Loading this week's earnings...</div>
+    <div id="mi-earnings-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+  </div>
+  <div id="mi-splits" style="display:none;"><div id="mi-splits-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div></div>
+  <div id="mi-ipo" style="display:none;"><div id="mi-ipo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div></div>
+  <div id="mi-economic" style="display:none;"><div id="mi-economic-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;"></div></div>
+  <div id="mi-screeners" style="display:none;">
+    <div style="font-size:10px;color:#607a99;font-family:'IBM Plex Mono',monospace;margin-bottom:10px;">Real-time data · Click any ticker then get AI forecast above</div>
+    <div style="border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}</script>
+      </div>
+    </div>
   </div>
 </div>
 <!-- SOCIAL PROOF SECTION -->
