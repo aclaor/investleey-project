@@ -1649,9 +1649,7 @@ async function loadCompanyProfile(sym){
   loading.style.display='block';
   error.style.display='none';
   content.style.display='none';
-  // Scroll to profile section
-  var sec = document.getElementById('company-profile-section');
-  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+  // No auto-scroll — user stays where they are
   try {
     var r = await fetch('https://api.polygon.io/v3/reference/tickers/'+sym+'?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
     var data = await r.json();
@@ -2601,5 +2599,6 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
