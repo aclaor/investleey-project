@@ -2276,11 +2276,11 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     </div>
 
     <!-- Main grid: chart left, details right -->
-    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start;">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:stretch;">
 
       <!-- LEFT: Price chart + stat cards -->
-      <div>
-        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:16px;">
+      <div style="display:flex;flex-direction:column;">
+        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;padding:16px;flex:1;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;letter-spacing:1px;">PRICE HISTORY</span>
             <div style="display:flex;gap:4px;" id="cp-period-tabs">
@@ -2317,7 +2317,7 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
       </div>
 
       <!-- RIGHT: Company details card -->
-      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
+      <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:#131926;border-bottom:1px solid #1e2a40;padding:12px 14px;display:flex;align-items:center;gap:10px;">
           <div id="cp-logo2" style="width:36px;height:36px;border-radius:6px;background:#0b0f1a;border:1px solid #1e2a40;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ecb81;flex-shrink:0;"></div>
           <div>
@@ -2325,7 +2325,7 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
             <div id="cp-website" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0af;cursor:pointer;"></div>
           </div>
         </div>
-        <div style="padding:12px 14px;">
+        <div style="padding:12px 14px;flex:1;display:flex;flex-direction:column;">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #0d1520;">
             <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Exchange</span>
             <span id="cp-exchange" style="font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#0af;"></span>
@@ -2354,9 +2354,9 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
             <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">Phone</span>
             <span id="cp-phone" style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;"></span>
           </div>
-          <div id="cp-desc-wrap" style="margin-top:10px;padding-top:10px;border-top:1px solid #1e2a40;">
+          <div id="cp-desc-wrap" style="margin-top:10px;padding-top:10px;border-top:1px solid #1e2a40;flex:1;overflow-y:auto;">
             <div style="font-size:9px;color:#344a66;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;margin-bottom:5px;">ABOUT</div>
-            <div id="cp-desc" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;line-height:1.7;max-height:100px;overflow:hidden;"></div>
+            <div id="cp-desc" style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;line-height:1.7;"></div>
           </div>
           <button onclick="window.loadCompanyForecast&&window.loadCompanyForecast()"
             style="width:100%;margin-top:12px;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:6px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:#000;cursor:pointer;">
