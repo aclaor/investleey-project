@@ -613,20 +613,20 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 
   <!-- MOST ACTIVE -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin:24px 0 12px;letter-spacing:1px;">⚡ MOST ACTIVE — Highest volume stocks today</div>
-  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP GAINERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;margin:24px 0 12px;letter-spacing:1px;">📈 TOP GAINERS — Best performing stocks today</div>
-  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP LOSERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;margin:24px 0 12px;letter-spacing:1px;">📉 TOP LOSERS — Biggest decliners today</div>
-  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
 
 
   <!-- PENNY STOCKS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;margin:24px 0 12px;letter-spacing:1px;">💰 PENNY STOCKS & SMALL CAPS — Under $10</div>
-  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:0;"></div>
+  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:0;"></div>
 
   </div>
 </div>
@@ -1168,7 +1168,7 @@ async function runForecast(isAutoRun){
   }
 }
 
-function loadPair(sym){var clean=sym.toUpperCase().trim();document.getElementById('pair-input').value=clean;document.querySelectorAll('.pair-row').forEach(function(r){r.classList.toggle('active-pair',r.getAttribute('data-sym')===clean);});runForecast();}
+function loadPair(sym){var clean=sym.toUpperCase().trim();document.getElementById('pair-input').value=clean;document.querySelectorAll('.pair-row').forEach(function(r){r.classList.toggle('active-pair',r.getAttribute('data-sym')===clean);});runForecast();if(typeof loadCompanyProfile==='function')loadCompanyProfile(clean);}
 function zoomChart(dir){if(!window._lwChart)return;try{var ts=window._lwChart.timeScale(),range=ts.getVisibleRange();if(!range)return;var mid=(range.from+range.to)/2,half=(range.to-range.from)/2,factor=dir<0?0.7:1.4;ts.setVisibleRange({from:Math.round(mid-half*factor),to:Math.round(mid+half*factor)});}catch(e){}}
 function resetZoom(){if(chartData)renderChart(chartData);}
 // ── TOP TICKER ────────────────────────────────
@@ -1419,6 +1419,7 @@ function renderAll(data) {
   if(el('hdr-chg2')){el('hdr-chg2').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg2').style.color=isUp?'var(--green)':'var(--red)';}
   renderChart(data);renderOrderBook(data.last_close);renderTrades(data.last_close);
   document.getElementById('pair-input').value=sym;
+  if(typeof loadCompanyProfile==='function'&&sym&&sym!==_cpCurrentSym)loadCompanyProfile(sym);
 }
 
 async function renderAllStockGrids(){
@@ -1535,6 +1536,7 @@ window.addEventListener('DOMContentLoaded',function(){
   document.getElementById('pair-input').value='AAPL';
   setTimeout(function(){runForecast(true);},1500);
   setTimeout(renderStockGrid,500);
+  setTimeout(function(){loadCompanyProfile('AAPL');},2500);
   setTimeout(function(){renderAllStockGrids().catch(function(e){console.log(e);});},500);
   setInterval(function(){renderAllStockGrids().catch(function(e){console.log(e);});},120000);
   setTimeout(drawMiniCharts,800);
@@ -2191,15 +2193,7 @@ async function loadCompanyProfile(sym){
   }
 }
 
-// Auto-load when user clicks a stock anywhere on page
-(function(){
-  var _origLoadPair = null;
-  window.addEventListener('DOMContentLoaded', function(){
-    setTimeout(function(){
-      loadCompanyProfile('AAPL');
-    }, 2000);
-  });
-})();
+// Auto-load triggered from main DOMContentLoaded
 
 </script>
       </div>
