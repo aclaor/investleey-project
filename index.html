@@ -613,20 +613,20 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 
   <!-- MOST ACTIVE -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin:24px 0 12px;letter-spacing:1px;">⚡ MOST ACTIVE — Highest volume stocks today</div>
-  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP GAINERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;margin:24px 0 12px;letter-spacing:1px;">📈 TOP GAINERS — Best performing stocks today</div>
-  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
 
   <!-- TOP LOSERS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;margin:24px 0 12px;letter-spacing:1px;">📉 TOP LOSERS — Biggest decliners today</div>
-  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:4px;"></div>
+  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
 
 
   <!-- PENNY STOCKS -->
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;margin:24px 0 12px;letter-spacing:1px;">💰 PENNY STOCKS & SMALL CAPS — Under $10</div>
-  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:0;"></div>
+  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:0;"></div>
 
   </div>
 </div>
@@ -639,7 +639,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 .mkt-card-chg{font-family:'IBM Plex Mono',monospace;font-size:11px;}
 .mkt-card-chg.up{color:#0ecb81;}
 .mkt-card-chg.dn{color:#f6465d;}
-.stock-grid-card{background:#131926;border:1px solid #1e2a40;border-radius:6px;padding:10px;cursor:pointer;transition:all .15s;text-align:center;}
+.stock-grid-card{background:#131926;border:1px solid #1e2a40;border-radius:6px;padding:10px;cursor:pointer;transition:all .15s;text-align:center;width:100%;box-sizing:border-box;}
 .stock-grid-card:hover{border-color:#0ecb81;background:#182030;}
 .sgc-sym{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#d0e0f0;margin-bottom:3px;}
 .sgc-price{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:3px;}
@@ -1431,7 +1431,7 @@ async function renderAllStockGrids(){
       active=data.active||[]; gainers=data.gainers||[]; losers=data.losers||[]; pennies=data.pennies||[];
       console.log('Stock grids: live /movers active='+active.length);
       var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
-      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
+      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
       return;
     }
   }catch(e){console.log('Movers failed:',e.message);}
@@ -1455,7 +1455,7 @@ async function renderAllStockGrids(){
   Object.keys(grids).forEach(function(id){
     var el=document.getElementById(id);
     var cfg=grids[id];
-    if(el&&cfg.items.length) el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');
+    if(el&&cfg.items.length) el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');
     else if(el) el.innerHTML='<div style="color:#607a99;font-size:10px;padding:8px;">No data</div>';
   });
 }
