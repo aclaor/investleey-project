@@ -1203,32 +1203,22 @@ function fillMarketTable(tbodyId,list){
   tbody.querySelectorAll('.market-row').forEach(function(row){row.addEventListener('click',function(){closeMarkets();loadPair(this.getAttribute('data-sym'));});});
 }
 async function fetchLiveMarkets(){
-  var active=[], gainers=[], losers=[], trending=[];
   try{
-    // Use Railway /movers - same source as the stock grids
     var resp = await fetch(API_BASE+'/movers');
     var data = await resp.json();
     if(data && data.active && data.active.length){
-      active  = data.active  || [];
-      gainers = data.gainers || [];
-      losers  = data.losers  || [];
-      // Trending = highest absolute % change
-      var all = [...active,...gainers,...losers];
-      var seen = new Set();
-      all.forEach(function(s){ seen.add(s.symbol); });
-      trending = [...active,...gainers,...losers].filter(function(s,i,arr){
-        return arr.findIndex(function(x){return x.symbol===s.symbol;})=== i;
-      }).sort(function(a,b){ return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage); });
-      console.log('Markets: live from Railway /movers');
-      fillMarketTable('tbl-active', active);
-      fillMarketTable('tbl-gainers', gainers);
-      fillMarketTable('tbl-losers', losers);
-      fillMarketTable('tbl-trending', trending.slice(0,10));
+      fillMarketTable('tbl-active', data.active||[]);
+      fillMarketTable('tbl-gainers', data.gainers||[]);
+      fillMarketTable('tbl-losers', data.losers||[]);
+      var all=[...(data.active||[]),...(data.gainers||[]),...(data.losers||[])];
+      var seen=new Set();
+      var trending=all.filter(function(s){if(seen.has(s.symbol))return false;seen.add(s.symbol);return true;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
+      fillMarketTable('tbl-trending', trending);
       return;
     }
-  }catch(e){ console.log('Markets /movers failed:',e.message); }
+  }catch(e){console.log('Markets /movers failed:',e.message);}
 
-  // Fallback static
+  // Fallback
   var stocks=[
     {symbol:'NVDA',name:'NVIDIA',price:128.26,changesPercentage:1.2,volume:169339208},
     {symbol:'AAPL',name:'Apple',price:211.45,changesPercentage:0.8,volume:43669609},
@@ -1236,68 +1226,17 @@ async function fetchLiveMarkets(){
     {symbol:'AMD',name:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
     {symbol:'META',name:'Meta',price:592.69,changesPercentage:-0.4,volume:15000000},
     {symbol:'MSFT',name:'Microsoft',price:461.20,changesPercentage:0.3,volume:22000000},
-    {symbol:'GOOGL',name:'Alphabet',price:175.85,changesPercentage:-0.6,volume:20444813},
-    {symbol:'AMZN',name:'Amazon',price:201.32,changesPercentage:0.5,volume:27540521},
-    {symbol:'NFLX',name:'Netflix',price:1285.40,changesPercentage:1.8,volume:4847196},
-    {symbol:'COIN',name:'Coinbase',price:248.15,changesPercentage:-2.1,volume:7927507},
     {symbol:'PLTR',name:'Palantir',price:124.80,changesPercentage:3.2,volume:45000000},
-    {symbol:'SOFI',name:'SoFi',price:14.25,changesPercentage:1.8,volume:32000000},
     {symbol:'NIO',name:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
     {symbol:'RIVN',name:'Rivian',price:16.54,changesPercentage:4.2,volume:22000000},
     {symbol:'HOOD',name:'Robinhood',price:73.64,changesPercentage:-3.0,volume:20817527},
   ];
-  fillMarketTable('tbl-active', stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
-  fillMarketTable('tbl-gainers', stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
-  fillMarketTable('tbl-losers', stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
-  fillMarketTable('tbl-trending', stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
+  fillMarketTable('tbl-active',stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
+  fillMarketTable('tbl-gainers',stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
+  fillMarketTable('tbl-losers',stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
+  fillMarketTable('tbl-trending',stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
 
 }
-async function runForecast(isAutoRun){
-  var isAdmin = currentUser && currentUser.email === 'alexclaor@gmail.com';
-  if(!currentUser && !isAdmin){
-    var now=Date.now();
-    var sessionStart=parseInt(localStorage.getItem('inv_session_start')||'0');
-    if(sessionStart>0&&(now-sessionStart)>7*24*60*60*1000){
-      localStorage.removeItem('inv_session_start');
-      localStorage.removeItem('inv_wait_until');
-      sessionStart=0;
-    }
-    var waitUntil=parseInt(localStorage.getItem('inv_wait_until')||'0');
-    if(waitUntil>now&&!isAutoRun){showTimeLimit(Math.ceil((waitUntil-now)/60000));return;}
-    if(!sessionStart){sessionStart=now;localStorage.setItem('inv_session_start',sessionStart);}
-    if(!isAutoRun){
-      var sessionMins=(now-sessionStart)/60000;
-      if(sessionMins>=120){localStorage.setItem('inv_wait_until',now+15*60*1000);localStorage.setItem('inv_session_start','0');showTimeLimit(15);return;}
-      var ifc=parseInt(localStorage.getItem('investleey_forecast_count')||'0')+1;
-      localStorage.setItem('investleey_forecast_count',ifc);
-      // banner only shows via 2hr limit
-    }
-  }
-  var symbol=document.getElementById('pair-input').value.trim().toUpperCase().replace(/[\/\-\s]/g,'')||'AAPL';
-  document.getElementById('pair-input').value=symbol;
-  var btn=document.getElementById('run-btn');
-  if(btn){btn.disabled=true;btn.textContent='... COMPUTING';}
-  showOverlay(true);
-  try{
-    var controller=new AbortController();var timeout=setTimeout(function(){controller.abort();},60000);
-    var res=await smartFetch('/forecast',{method:'POST',headers:getAuthHeaders(),body:JSON.stringify({symbol:symbol,interval:currentInterval}),signal:controller.signal});
-    clearTimeout(timeout);
-    if(!res.ok){var e2=await res.text().catch(function(){return'';});var ej={};try{ej=JSON.parse(e2);}catch(x){}throw new Error(ej.detail||('Error '+res.status));}
-    var data=await res.json();renderAll(data);showOverlay(false);showToast('✅ Forecast complete! Scroll down for AI signal.','success');
-  }catch(e){
-    showToast('Error: '+(e.message||'unknown'),'error');showOverlay(false);
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='▶ ZEUS-AI';}
-  }
-}
-// ── PAYPAL RETURN ─────────────────────────────
-(function(){
-  var params=new URLSearchParams(window.location.search);
-  if(params.get('type')==='recovery'){setTimeout(function(){var modal=document.getElementById('reset-pwd-modal');if(modal){modal.classList.remove('hidden');modal.style.display='flex';}},300);}
-  if(params.get('payment')==='success'){var token=params.get('token');if(token&&currentUser){fetch(API_BASE+'/paypal/capture/'+token,{method:'POST',headers:getAuthHeaders()}).then(function(r){return r.json();}).then(function(d){if(d.status==='success')showToast('🎉 Upgraded to Pro!','success');});}history.replaceState({},'',window.location.pathname);}
-  if(params.get('payment')==='cancel'){showToast('Payment cancelled.','error');history.replaceState({},'',window.location.pathname);}
-})();
-// ── STOCK GRIDS ───────────────────────────────
 function makeStockCard(s,color){
   var up=parseFloat(s.changesPercentage||0)>=0,sym=s.symbol||'',price=parseFloat(s.price||0),chg=parseFloat(s.changesPercentage||0);
   var bg=color?'rgba('+color+',0.06)':(up?'rgba(14,203,129,0.08)':'rgba(246,70,93,0.08)');
@@ -1328,6 +1267,64 @@ function renderStockGrid(){
   var grid=document.getElementById('stock-grid');if(!grid)return;
   grid.innerHTML=stocks.map(function(s){return makeStockCard(s,null);}).join('');
 }
+
+function renderAll(data) {
+  currentPrice=data.last_close;
+  var sym=data.symbol,el=function(id){return document.getElementById(id);};
+  if(el('hdr-pair'))el('hdr-pair').textContent=sym;
+  if(el('hdr-price'))el('hdr-price').textContent='$'+fmt(data.last_close);
+  if(el('hdr-acc7'))el('hdr-acc7').textContent=data.accuracy_ma7.toFixed(2)+'%';
+  if(el('hdr-acc25'))el('hdr-acc25').textContent=data.accuracy_ma25.toFixed(2)+'%';
+  if(el('hdr-gen'))el('hdr-gen').textContent=new Date(data.generated_at).toLocaleTimeString();
+  var hi=data.candles.reduce(function(m,c){return Math.max(m,parseFloat(c.h));},0);
+  var lo=data.candles.reduce(function(m,c){return Math.min(m,parseFloat(c.l));},Infinity);
+  if(el('hdr-high'))el('hdr-high').textContent='$'+fmt(hi);
+  if(el('hdr-low'))el('hdr-low').textContent='$'+fmt(lo);
+  var fcVal=data.forecast_ma7&&data.forecast_ma7.length?data.forecast_ma7[data.forecast_ma7.length-1]:data.last_close;
+  if(el('fc-price'))el('fc-price').textContent='$'+fmt(fcVal);
+  var pct=(fcVal-data.last_close)/data.last_close*100;
+  var shortIntervals=['1m','5m','15m'];
+  var isShort=shortIntervals.indexOf(currentInterval)>=0;
+  var signalName='neut';
+  if(isShort){
+    var fv200=data.forecast_vwap200;
+    var _idx=currentInterval==='1m'?29:4;
+    if(fv200&&fv200.length>_idx){
+      var v200_first=fv200[0],v200_fifth=fv200[_idx];
+      var threshold=(data.last_close||v200_first)*(currentInterval==='1m'?0.0002:0.0005);
+      if(Math.abs(v200_fifth-v200_first)<=threshold){signalName='neut';}
+      else if(v200_first<v200_fifth){signalName='bull';}
+      else{signalName='bear';}
+    }
+  } else {
+    var fma7=data.forecast_ma7,fma3=data.forecast_ma3;
+    if(fma7&&fma7.length>=5&&fma3&&fma3.length>=5){
+      var ma7_bull=fma7[0]<fma7[4],ma7_bear=fma7[0]>fma7[4];
+      var ma3_bull=fma3[0]<fma3[4],ma3_bear=fma3[0]>fma3[4];
+      if(ma7_bull&&ma3_bull){signalName='bull';}
+      else if(ma7_bear&&ma3_bear){signalName='bear';}
+      else{signalName='neut';}
+    }
+  }
+  if(el('fc-chg')){el('fc-chg').textContent='60H - '+(pct>=0?'+':'')+pct.toFixed(2)+'% | '+(signalName==='bull'?'BULLISH':signalName==='bear'?'BEARISH':'NEUTRAL');el('fc-chg').className='zeus-price-sub '+(signalName==='bull'?'up':signalName==='bear'?'dn':'');}
+  if(el('conf-fill'))el('conf-fill').style.width=Math.min(100,Math.max(0,data.accuracy_ma7)).toFixed(1)+'%';
+  if(el('fc-conf'))el('fc-conf').textContent=data.accuracy_ma7.toFixed(1)+'%';
+  document.querySelectorAll('.sig').forEach(function(s){s.classList.remove('active');});
+  var sigEl=document.querySelector('.sig.'+signalName);if(sigEl)sigEl.classList.add('active');
+  if(el('m-acc7'))el('m-acc7').textContent=data.accuracy_ma7.toFixed(2)+'%';
+  if(el('m-acc25'))el('m-acc25').textContent=data.accuracy_ma25.toFixed(2)+'%';
+  if(el('m-acc3'))el('m-acc3').textContent=(data.accuracy_ma3||0).toFixed(2)+'%';
+  if(el('m-accv'))el('m-accv').textContent=(data.accuracy_vwap600||0).toFixed(2)+'%';
+  if(el('fc-badge'))el('fc-badge').style.display='flex';
+  if(el('fc-pill-1')){el('fc-pill-1').textContent='ZEUS-AI: $'+fmt(fcVal);el('fc-pill-1').style.color=pct>=0?'var(--green)':'var(--red)';}
+  if(el('fc-pill-2'))el('fc-pill-2').textContent='Acc: '+data.accuracy_ma7.toFixed(1)+'%';
+  var isUp=pct>=0;
+  if(el('hdr-chg')){el('hdr-chg').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg').className='pair-change'+(isUp?'':' dn');}
+  if(el('hdr-chg2')){el('hdr-chg2').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg2').style.color=isUp?'var(--green)':'var(--red)';}
+  renderChart(data);renderOrderBook(data.last_close);renderTrades(data.last_close);
+  document.getElementById('pair-input').value=sym;
+}
+
 async function renderAllStockGrids(){
   var active=[], gainers=[], losers=[], pennies=[];
   try{
@@ -1338,14 +1335,14 @@ async function renderAllStockGrids(){
       gainers = data.gainers || [];
       losers  = data.losers  || [];
       pennies = data.pennies || [];
-      console.log('Stock grids: live from Railway /movers');
+      console.log('Stock grids: live from Railway /movers (active='+active.length+')');
       var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
-      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items.length)el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
+      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,6).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
       return;
     }
   }catch(e){console.log('Railway /movers failed:',e.message);}
 
-  // Fallback static data
+  // Fallback static data - always renders
   var stocks=[
     {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},
     {symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
@@ -1365,15 +1362,12 @@ async function renderAllStockGrids(){
     {symbol:'PTON',price:5.71,changesPercentage:2.3,volume:8901844},
     {symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
     {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},
-    {symbol:'SOFI',price:14.25,changesPercentage:1.8,volume:32000000},
-    {symbol:'MSTR',price:389.50,changesPercentage:2.1,volume:6000000},
   ];
   active  = stocks.slice().sort(function(a,b){return b.volume-a.volume;});
   gainers = stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
   losers  = stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;});
   pennies = stocks.filter(function(s){return s.price<15;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
 
-  // Render fallback grids
   var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
   Object.keys(grids).forEach(function(id){
     var el=document.getElementById(id);
