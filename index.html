@@ -1203,139 +1203,55 @@ function fillMarketTable(tbodyId,list){
   tbody.querySelectorAll('.market-row').forEach(function(row){row.addEventListener('click',function(){closeMarkets();loadPair(this.getAttribute('data-sym'));});});
 }
 async function fetchLiveMarkets(){
-  var stocks=[
-    {symbol:'NVDA',name:'NVIDIA',price:875.40,changesPercentage:2.15,volume:42000000},
-    {symbol:'AAPL',name:'Apple',price:195.50,changesPercentage:0.52,volume:55000000},
-    {symbol:'MSFT',name:'Microsoft',price:420.30,changesPercentage:-0.31,volume:22000000},
-    {symbol:'TSLA',name:'Tesla',price:175.20,changesPercentage:-1.52,volume:85000000},
-    {symbol:'AMD',name:'AMD',price:165.40,changesPercentage:1.84,volume:48000000},
-    {symbol:'META',name:'Meta',price:520.10,changesPercentage:0.76,volume:15000000},
-    {symbol:'AMZN',name:'Amazon',price:195.30,changesPercentage:0.62,volume:35000000},
-    {symbol:'GOOGL',name:'Alphabet',price:175.80,changesPercentage:0.83,volume:24000000},
-    {symbol:'JPM',name:'JPMorgan',price:210.50,changesPercentage:0.33,volume:12000000},
-    {symbol:'NFLX',name:'Netflix',price:640.20,changesPercentage:-0.41,volume:8000000},
-  ];
-  if(btData.length>0){stocks=stocks.map(function(st){var live=btData.find(function(d){return d.s===st.symbol;});return live&&live.p>0?{...st,price:live.p,changesPercentage:live.c}:st;});}
-  fillMarketTable('tbl-active',stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
-  fillMarketTable('tbl-gainers',stocks.slice().filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
-  fillMarketTable('tbl-losers',stocks.slice().filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
-  fillMarketTable('tbl-trending',stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
-}
-// ── CHART RENDERING ───────────────────────────
-function renderChart(data) {
-  chartData=data;window._chartData=data;window._candles=data.candles;
-  var candles=data.candles,container=document.getElementById('tv-chart');
-  if(!container)return;
-  if(window._lwResizeObs){try{window._lwResizeObs.disconnect();}catch(e){}window._lwResizeObs=null;}
-  if(window._lwChart){try{window._lwChart.remove();}catch(e){}window._lwChart=null;}
-  var cw=container.clientWidth||800,ch=container.clientHeight||400;
-  if(cw<10)cw=800;if(ch<10)ch=400;
-  var chart;
+  var active=[], gainers=[], losers=[], trending=[];
   try{
-    chart=LightweightCharts.createChart(container,{width:cw,height:ch,layout:{background:{type:'solid',color:'#060810'},textColor:'#607a99',fontSize:11},grid:{vertLines:{color:'#1e2a40',style:1},horzLines:{color:'#1e2a40',style:1}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:'#1e2a40'},timeScale:{borderColor:'#1e2a40',timeVisible:true,secondsVisible:false},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true},handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}});
-    window._lwChart=chart;
-  }catch(err){showOverlay(false);return;}
-  var candleSeries=chart.addCandlestickSeries({upColor:'#0ecb81',downColor:'#f6465d',borderUpColor:'#0ecb81',borderDownColor:'#f6465d',wickUpColor:'#0ecb81',wickDownColor:'#f6465d'});
-  var lwCandles=candles.map(function(c){return{time:Math.floor(new Date(c.t).getTime()/1000),open:parseFloat(c.o),high:parseFloat(c.h),low:parseFloat(c.l),close:parseFloat(c.c)};}).filter(function(c){return !isNaN(c.open)&&c.time>0;});
-  if(lwCandles.length===0){showOverlay(false);return;}
-  candleSeries.setData(lwCandles);
-  function addLine(maData,color,width){
-    var s=chart.addLineSeries({color:color,lineWidth:width||1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-    var pts=[];
-    for(var i=0;i<maData.length;i++){var v=maData[i];if(v===null||v===undefined||isNaN(v))continue;if(lwCandles[i]&&lwCandles[i].time>0)pts.push({time:lwCandles[i].time,value:v});}
-    try{if(pts.length>0)s.setData(pts);}catch(e){}
-    return s;
-  }
-  addLine(data.ma7,'#1890ff',1.5);addLine(data.ma3,'#f6465d',1);addLine(data.ma25,'#00cc44',1.2);addLine(data.vwap600,'#f0b90b',1.5);addLine(data.vwap200,'#ff69b4',1);
-  var freqMins={'1m':1,'5m':5,'15m':15,'1h':60,'4h':240,'1d':1440};
-  var stepSec=(freqMins[currentInterval]||60)*60,lastTime=lwCandles[lwCandles.length-1].time;
-  function addForecast(fcData,startVal,color){
-    var s=chart.addLineSeries({color:color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dashed,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-    var pts=[{time:lastTime,value:startVal}];
-    fcData.slice(0,60).forEach(function(v,i){pts.push({time:lastTime+(i+1)*stepSec,value:v});});
-    try{s.setData(pts);}catch(e){}
-  }
-  addForecast(data.forecast_ma7,data.ma7[data.ma7.length-1],'#1890ff');
-  addForecast(data.forecast_ma3,data.ma3[data.ma3.length-1],'#f6465d');
-  addForecast(data.forecast_ma25,data.ma25[data.ma25.length-1],'#00cc44');
-  addForecast(data.forecast_vwap600,data.vwap600[data.vwap600.length-1],'#f0b90b');
-  addForecast(data.forecast_vwap200,data.vwap200[data.vwap200.length-1],'#ff69b4');
-  var defaultVis={'1m':200,'5m':200,'15m':150,'1h':150,'4h':100,'1d':100};
-  var vis=Math.min(defaultVis[currentInterval]||200,lwCandles.length);
-  try{chart.timeScale().setVisibleRange({from:lwCandles[Math.max(0,lwCandles.length-vis)].time,to:lastTime+61*stepSec});}catch(e){}
-  window._lwResizeObs=new ResizeObserver(function(){if(!window._lwChart)return;try{var rw=container.clientWidth||800,rh=container.clientHeight||400;if(rw>0&&rh>0)window._lwChart.resize(rw,rh);}catch(e){}});
-  window._lwResizeObs.observe(container);
-  window._lwCandleData=lwCandles;window._lwStepSec=stepSec;window._lwLastTime=lastTime;
-}
-// ── RENDER ALL ────────────────────────────────
-function renderAll(data) {
-  currentPrice=data.last_close;
-  var sym=data.symbol,el=function(id){return document.getElementById(id);};
-  if(el('hdr-pair'))el('hdr-pair').textContent=sym;
-  if(el('hdr-price'))el('hdr-price').textContent='$'+fmt(data.last_close);
-  if(el('hdr-acc7'))el('hdr-acc7').textContent=data.accuracy_ma7.toFixed(2)+'%';
-  if(el('hdr-acc25'))el('hdr-acc25').textContent=data.accuracy_ma25.toFixed(2)+'%';
-  if(el('hdr-gen'))el('hdr-gen').textContent=new Date(data.generated_at).toLocaleTimeString();
-  var hi=data.candles.reduce(function(m,c){return Math.max(m,parseFloat(c.h));},0);
-  var lo=data.candles.reduce(function(m,c){return Math.min(m,parseFloat(c.l));},Infinity);
-  if(el('hdr-high'))el('hdr-high').textContent='$'+fmt(hi);
-  if(el('hdr-low'))el('hdr-low').textContent='$'+fmt(lo);
-  var fcVal=data.forecast_ma7&&data.forecast_ma7.length?data.forecast_ma7[data.forecast_ma7.length-1]:data.last_close;
-  if(el('fc-price'))el('fc-price').textContent='$'+fmt(fcVal);
-  var pct=(fcVal-data.last_close)/data.last_close*100;
-  // Signal logic
-  var fc200=data.forecast_vwap200,signalName='neut';
-  var shortIntervals=['1m','5m','15m'];
-  var isShort=shortIntervals.indexOf(currentInterval)>=0;
-  if(isShort){
-    var fv200=data.forecast_vwap200;
-    var _idx = currentInterval==='1m' ? 29 : 4;
-    var threshold_pct = currentInterval==='1m' ? 0.0002 : 0.0005;
-    if(fv200&&fv200.length>_idx){
-      var v200_first=fv200[0],v200_fifth=fv200[_idx];
-      var threshold=(data.last_close||v200_first)*0.0005;
-      if(Math.abs(v200_fifth-v200_first)<=threshold){signalName='neut';}
-      else if(v200_first<v200_fifth){signalName='bull';}
-      else{signalName='bear';}
+    // Use Railway /movers - same source as the stock grids
+    var resp = await fetch(API_BASE+'/movers');
+    var data = await resp.json();
+    if(data && data.active && data.active.length){
+      active  = data.active  || [];
+      gainers = data.gainers || [];
+      losers  = data.losers  || [];
+      // Trending = highest absolute % change
+      var all = [...active,...gainers,...losers];
+      var seen = new Set();
+      all.forEach(function(s){ seen.add(s.symbol); });
+      trending = [...active,...gainers,...losers].filter(function(s,i,arr){
+        return arr.findIndex(function(x){return x.symbol===s.symbol;})=== i;
+      }).sort(function(a,b){ return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage); });
+      console.log('Markets: live from Railway /movers');
+      fillMarketTable('tbl-active', active);
+      fillMarketTable('tbl-gainers', gainers);
+      fillMarketTable('tbl-losers', losers);
+      fillMarketTable('tbl-trending', trending.slice(0,10));
+      return;
     }
-  } else {
-    var fma7=data.forecast_ma7,fma3=data.forecast_ma3;
-    if(fma7&&fma7.length>=5&&fma3&&fma3.length>=5){
-      var ma7_first=fma7[0],ma7_fifth=fma7[4];
-      var ma3_first=fma3[0],ma3_fifth=fma3[4];
-      var ma7_bull=ma7_first<ma7_fifth,ma7_bear=ma7_first>ma7_fifth;
-      var ma3_bull=ma3_first<ma3_fifth,ma3_bear=ma3_first>ma3_fifth;
-      if(ma7_bull&&ma3_bull){signalName='bull';}
-      else if(ma7_bear&&ma3_bear){signalName='bear';}
-      else{signalName='neut';}
-    }
-  }
-  if(el('fc-chg')){el('fc-chg').textContent='60H · '+(pct>=0?'+':'')+pct.toFixed(2)+'% | '+(signalName==='bull'?'BULLISH 📈':signalName==='bear'?'BEARISH 📉':'NEUTRAL ●');el('fc-chg').className='zeus-price-sub '+(signalName==='bull'?'up':signalName==='bear'?'dn':'');}
-  if(el('conf-fill'))el('conf-fill').style.width=Math.min(100,Math.max(0,data.accuracy_ma7)).toFixed(1)+'%';
-  if(el('fc-conf'))el('fc-conf').textContent=data.accuracy_ma7.toFixed(1)+'%';
-  document.querySelectorAll('.sig').forEach(function(s){s.classList.remove('active');});
-  var sigEl=document.querySelector('.sig.'+signalName);if(sigEl)sigEl.classList.add('active');
-  var _sigFull = signalName==='bull'?'BULLISH':signalName==='bear'?'BEARISH':'NEUTRAL';
-  updateSignalPanel(data, _sigFull, currentInterval);
-  checkEmailCapture();
-  updateUpgradePrompt();
-  var _fc7 = data.forecast_ma7 || [];
-  var _tgt = _fc7.length > 0 ? _fc7[_fc7.length-1] : data.last_close;
-  saveTrackRecord(data.symbol || currentSymbol, currentInterval, _sigFull, data.last_close, _tgt);
-  if(el('m-acc7'))el('m-acc7').textContent=data.accuracy_ma7.toFixed(2)+'%';
-  if(el('m-acc25'))el('m-acc25').textContent=data.accuracy_ma25.toFixed(2)+'%';
-  if(el('m-acc3'))el('m-acc3').textContent=(data.accuracy_ma3||0).toFixed(2)+'%';
-  if(el('m-accv'))el('m-accv').textContent=(data.accuracy_vwap600||0).toFixed(2)+'%';
-  if(el('fc-badge'))el('fc-badge').style.display='flex';
-  if(el('fc-pill-1')){el('fc-pill-1').textContent='ZEUS-AI: $'+fmt(fcVal);el('fc-pill-1').style.color=pct>=0?'var(--green)':'var(--red)';}
-  if(el('fc-pill-2'))el('fc-pill-2').textContent='Acc: '+data.accuracy_ma7.toFixed(1)+'%';
-  var isUp=pct>=0;
-  if(el('hdr-chg')){el('hdr-chg').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg').className='pair-change'+(isUp?'':' dn');}
-  if(el('hdr-chg2')){el('hdr-chg2').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg2').style.color=isUp?'var(--green)':'var(--red)';}
-  renderChart(data);renderOrderBook(data.last_close);renderTrades(data.last_close);
-  document.getElementById('pair-input').value=sym;
+  }catch(e){ console.log('Markets /movers failed:',e.message); }
+
+  // Fallback static
+  var stocks=[
+    {symbol:'NVDA',name:'NVIDIA',price:128.26,changesPercentage:1.2,volume:169339208},
+    {symbol:'AAPL',name:'Apple',price:211.45,changesPercentage:0.8,volume:43669609},
+    {symbol:'TSLA',name:'Tesla',price:342.10,changesPercentage:-1.5,volume:46104415},
+    {symbol:'AMD',name:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
+    {symbol:'META',name:'Meta',price:592.69,changesPercentage:-0.4,volume:15000000},
+    {symbol:'MSFT',name:'Microsoft',price:461.20,changesPercentage:0.3,volume:22000000},
+    {symbol:'GOOGL',name:'Alphabet',price:175.85,changesPercentage:-0.6,volume:20444813},
+    {symbol:'AMZN',name:'Amazon',price:201.32,changesPercentage:0.5,volume:27540521},
+    {symbol:'NFLX',name:'Netflix',price:1285.40,changesPercentage:1.8,volume:4847196},
+    {symbol:'COIN',name:'Coinbase',price:248.15,changesPercentage:-2.1,volume:7927507},
+    {symbol:'PLTR',name:'Palantir',price:124.80,changesPercentage:3.2,volume:45000000},
+    {symbol:'SOFI',name:'SoFi',price:14.25,changesPercentage:1.8,volume:32000000},
+    {symbol:'NIO',name:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
+    {symbol:'RIVN',name:'Rivian',price:16.54,changesPercentage:4.2,volume:22000000},
+    {symbol:'HOOD',name:'Robinhood',price:73.64,changesPercentage:-3.0,volume:20817527},
+  ];
+  fillMarketTable('tbl-active', stocks.slice().sort(function(a,b){return b.volume-a.volume;}));
+  fillMarketTable('tbl-gainers', stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;}));
+  fillMarketTable('tbl-losers', stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;}));
+  fillMarketTable('tbl-trending', stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
+
 }
-// ── RUN FORECAST ──────────────────────────────
 async function runForecast(isAutoRun){
   var isAdmin = currentUser && currentUser.email === 'alexclaor@gmail.com';
   if(!currentUser && !isAdmin){
