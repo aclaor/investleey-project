@@ -1119,6 +1119,55 @@ function updatePairsList() {
     });
   });
 }
+
+async function runForecast(isAutoRun){
+  var isAdmin = currentUser && currentUser.email === 'alexclaor@gmail.com';
+  if(!currentUser && !isAdmin){
+    var now=Date.now();
+    var sessionStart=parseInt(localStorage.getItem('inv_session_start')||'0');
+    var waitUntil=parseInt(localStorage.getItem('inv_wait_until')||'0');
+    if(waitUntil>now&&!isAutoRun){showTimeLimit(Math.ceil((waitUntil-now)/60000));return;}
+    if(!sessionStart){sessionStart=now;localStorage.setItem('inv_session_start',sessionStart);}
+    if(!isAutoRun){
+      var sessionMins=(now-sessionStart)/60000;
+      if(sessionMins>=120){localStorage.setItem('inv_wait_until',now+15*60*1000);localStorage.setItem('inv_session_start','0');showTimeLimit(15);return;}
+    }
+  }
+  var symbol=document.getElementById('pair-input').value.trim().toUpperCase().replace(/[\/\-\s]/g,'')||'AAPL';
+  document.getElementById('pair-input').value=symbol;
+  var btn=document.getElementById('run-btn');
+  if(btn){btn.disabled=true;btn.textContent='... COMPUTING';}
+  var _msgs=['... COMPUTING','Fetching data...','Running AI...','Almost ready...'];
+  var _mi=0;var _mt=setInterval(function(){_mi=(_mi+1)%_msgs.length;if(document.getElementById('run-btn'))document.getElementById('run-btn').textContent=_msgs[_mi];},3000);
+  showOverlay(true);
+  try{
+    var controller=new AbortController();
+    var timeout=setTimeout(function(){controller.abort();},90000);
+    var res=await smartFetch('/forecast',{
+      method:'POST',
+      headers:getAuthHeaders(),
+      body:JSON.stringify({symbol:symbol,interval:currentInterval}),
+      signal:controller.signal
+    });
+    clearTimeout(timeout);
+    if(!res.ok){
+      var e2=await res.text().catch(function(){return'';});
+      var ej={};try{ej=JSON.parse(e2);}catch(x){}
+      throw new Error(ej.detail||('Error '+res.status));
+    }
+    var data=await res.json();
+    renderAll(data);
+    showOverlay(false);
+    showToast('Forecast complete!','success');
+  }catch(e){
+    showToast('Error: '+(e.message||'unknown'),'error');
+    showOverlay(false);
+  }finally{
+    if(typeof _mt!=='undefined')clearInterval(_mt);
+    if(btn){btn.disabled=false;btn.textContent='▶ ZEUS-AI';}
+  }
+}
+
 function loadPair(sym){var clean=sym.toUpperCase().trim();document.getElementById('pair-input').value=clean;document.querySelectorAll('.pair-row').forEach(function(r){r.classList.toggle('active-pair',r.getAttribute('data-sym')===clean);});runForecast();}
 function zoomChart(dir){if(!window._lwChart)return;try{var ts=window._lwChart.timeScale(),range=ts.getVisibleRange();if(!range)return;var mid=(range.from+range.to)/2,half=(range.to-range.from)/2,factor=dir<0?0.7:1.4;ts.setVisibleRange({from:Math.round(mid-half*factor),to:Math.round(mid+half*factor)});}catch(e){}}
 function resetZoom(){if(chartData)renderChart(chartData);}
