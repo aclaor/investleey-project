@@ -1525,6 +1525,197 @@ setTimeout(showSignupPopup,30000);
 function updateVisitorCount(){var base=180+Math.floor(Math.random()*120);var el=document.getElementById('live-visitors');if(el)el.textContent=base;}
 setInterval(updateVisitorCount,15000);
 // ── INIT ──────────────────────────────────────
+// ── COMPANY PROFILE FUNCTIONS ──────────────────────────────
+// ── COMPANY PROFILE ───────────────────────────────────────────
+var _cpChart = null;
+var _cpCurrentSym = '';
+var _cpCurrentDays = 30;
+
+function fmtMktCap(v){
+  if(!v) return '—';
+  if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T';
+  if(v>=1e9)  return '$'+(v/1e9).toFixed(2)+'B';
+  if(v>=1e6)  return '$'+(v/1e6).toFixed(2)+'M';
+  return '$'+v.toLocaleString();
+}
+function fmtShares(v){
+  if(!v) return '—';
+  if(v>=1e9) return (v/1e9).toFixed(2)+'B';
+  if(v>=1e6) return (v/1e6).toFixed(2)+'M';
+  return v.toLocaleString();
+}
+function fmtNum(v){ return v?v.toLocaleString():'—'; }
+function setEl(id,val){ var e=document.getElementById(id); if(e) e.textContent=val||'—'; }
+
+function cpSetPeriod(btn, days){
+  _cpCurrentDays = parseInt(days);
+  document.querySelectorAll('.cp-ptab').forEach(function(b){
+    b.style.background='transparent';
+    b.style.borderColor='#1e2a40';
+    b.style.color='#607a99';
+  });
+  btn.style.background='rgba(14,203,129,0.08)';
+  btn.style.borderColor='#0ecb81';
+  btn.style.color='#0ecb81';
+  if(_cpCurrentSym) loadCPChart(_cpCurrentSym, _cpCurrentDays);
+}
+
+function loadCompanyForecast(){
+  if(!_cpCurrentSym) return;
+  window.scrollTo({top:0,behavior:'smooth'});
+  var inp = document.getElementById('pair-input');
+  if(inp) inp.value = _cpCurrentSym;
+  setTimeout(function(){ if(typeof runForecast==='function') runForecast(); }, 300);
+}
+
+async function loadCPChart(sym, days){
+  var canvas = document.getElementById('cp-chart');
+  if(!canvas) return;
+  var to = new Date();
+  var from = new Date(to.getTime() - days*24*60*60*1000);
+  var toStr = to.toISOString().split('T')[0];
+  var fromStr = from.toISOString().split('T')[0];
+  var mult = days<=7?1:1, span = days<=7?'day':'day';
+  try {
+    var r = await fetch('https://api.polygon.io/v2/aggs/ticker/'+sym+'/range/'+mult+'/'+span+'/'+fromStr+'/'+toStr+'?adjusted=true&sort=asc&limit=365&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var data = await r.json();
+    if(!data.results||!data.results.length) return;
+    var labels = data.results.map(function(d){
+      var dt = new Date(d.t);
+      return (dt.getMonth()+1)+'/'+(dt.getDate());
+    });
+    var prices = data.results.map(function(d){ return parseFloat(d.c.toFixed(2)); });
+    var isUp = prices[prices.length-1] >= prices[0];
+    var lineColor = isUp ? '#0ecb81' : '#f6465d';
+    var fillColor = isUp ? 'rgba(14,203,129,0.06)' : 'rgba(246,70,93,0.06)';
+    if(_cpChart){ try{_cpChart.destroy();}catch(e){} _cpChart=null; }
+    _cpChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: sym,
+          data: prices,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: lineColor,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0b0f1a',
+            borderColor: '#1e2a40',
+            borderWidth: 1,
+            titleColor: '#607a99',
+            bodyColor: lineColor,
+            titleFont: { family: 'IBM Plex Mono', size: 10 },
+            bodyFont: { family: 'IBM Plex Mono', size: 11 },
+            callbacks: { label: function(ctx){ return ' $'+ctx.parsed.y.toFixed(2); } }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(30,42,64,0.5)' },
+            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
+          },
+          y: {
+            grid: { color: 'rgba(30,42,64,0.5)' },
+            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, callback: function(v){ return '$'+v.toFixed(0); } },
+            position: 'right'
+          }
+        }
+      }
+    });
+  } catch(e) { console.log('CP chart error:', e.message); }
+}
+
+async function loadCompanyProfile(sym){
+  if(!sym) return;
+  sym = sym.toUpperCase().trim();
+  _cpCurrentSym = sym;
+  document.getElementById('cp-input').value = sym;
+  var loading = document.getElementById('cp-loading');
+  var error   = document.getElementById('cp-error');
+  var content = document.getElementById('cp-content');
+  loading.style.display='block';
+  error.style.display='none';
+  content.style.display='none';
+  // Scroll to profile section
+  var sec = document.getElementById('company-profile-section');
+  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
+  try {
+    var r = await fetch('https://api.polygon.io/v3/reference/tickers/'+sym+'?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
+    var data = await r.json();
+    if(!data.results){ throw new Error('No data for '+sym); }
+    var d = data.results;
+    var initials = sym.substring(0,2).toUpperCase();
+    var colors = ['#0ecb81','#0af','#f0b90b','#a78bfa','#f6465d','#00b4d8'];
+    var col = colors[sym.charCodeAt(0)%colors.length];
+    // Logo circles
+    ['cp-logo','cp-logo2'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.textContent=initials; el.style.color=col; el.style.borderColor=col+'44'; el.style.background=col+'12'; }
+    });
+    // Header
+    setEl('cp-sym', sym);
+    setEl('cp-fullname', d.name||sym);
+    setEl('cp-fullname2', d.name||sym);
+    setEl('cp-exchange-badge', d.primary_exchange||'');
+    setEl('cp-exchange', d.primary_exchange||'—');
+    // Market cap
+    var mc = fmtMktCap(d.market_cap);
+    setEl('cp-mktcap', mc);
+    setEl('cp-mktcap2', mc);
+    // Details
+    setEl('cp-employees', fmtNum(d.total_employees));
+    setEl('cp-employees2', fmtNum(d.total_employees));
+    var listDate = d.list_date ? new Date(d.list_date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
+    setEl('cp-listed', listDate);
+    setEl('cp-listed2', listDate);
+    var shares = fmtShares(d.weighted_shares_outstanding||d.share_class_shares_outstanding);
+    setEl('cp-shares', shares);
+    setEl('cp-shares2', shares);
+    setEl('cp-industry', d.sic_description||d.type||'—');
+    setEl('cp-sic', d.sic_description||'—');
+    setEl('cp-phone', d.phone_number||'—');
+    // Website
+    var webEl = document.getElementById('cp-website');
+    if(webEl && d.homepage_url){
+      webEl.textContent = d.homepage_url.replace('https://','').replace('http://','').replace(/\/$/,'');
+      webEl.onclick = function(){ window.open(d.homepage_url,'_blank'); };
+    }
+    // Description
+    if(d.description){
+      var desc = d.description.length>280 ? d.description.substring(0,280)+'...' : d.description;
+      setEl('cp-desc', desc);
+    }
+    loading.style.display='none';
+    content.style.display='block';
+    // Load chart
+    loadCPChart(sym, _cpCurrentDays);
+  } catch(e) {
+    loading.style.display='none';
+    error.style.display='block';
+    error.textContent = 'Could not load company data for '+sym+'. Try another ticker.';
+    console.log('Company profile error:', e.message);
+  }
+}
+
+// Expose company profile functions globally
+window.loadCompanyProfile = loadCompanyProfile;
+window.loadCompanyForecast = loadCompanyForecast;
+window.cpSetPeriod = cpSetPeriod;
+// Auto-load triggered from main DOMContentLoaded
+
 window.addEventListener('DOMContentLoaded',function(){
   fetchLiveTicker();
   updatePairsList();
@@ -2008,198 +2199,7 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     <div style="border:1px solid #1e2a40;border-radius:8px;overflow:hidden;">
       <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}
-// ── COMPANY PROFILE ───────────────────────────────────────────
-var _cpChart = null;
-var _cpCurrentSym = '';
-var _cpCurrentDays = 30;
-
-function fmtMktCap(v){
-  if(!v) return '—';
-  if(v>=1e12) return '$'+(v/1e12).toFixed(2)+'T';
-  if(v>=1e9)  return '$'+(v/1e9).toFixed(2)+'B';
-  if(v>=1e6)  return '$'+(v/1e6).toFixed(2)+'M';
-  return '$'+v.toLocaleString();
-}
-function fmtShares(v){
-  if(!v) return '—';
-  if(v>=1e9) return (v/1e9).toFixed(2)+'B';
-  if(v>=1e6) return (v/1e6).toFixed(2)+'M';
-  return v.toLocaleString();
-}
-function fmtNum(v){ return v?v.toLocaleString():'—'; }
-function setEl(id,val){ var e=document.getElementById(id); if(e) e.textContent=val||'—'; }
-
-function cpSetPeriod(btn, days){
-  _cpCurrentDays = parseInt(days);
-  document.querySelectorAll('.cp-ptab').forEach(function(b){
-    b.style.background='transparent';
-    b.style.borderColor='#1e2a40';
-    b.style.color='#607a99';
-  });
-  btn.style.background='rgba(14,203,129,0.08)';
-  btn.style.borderColor='#0ecb81';
-  btn.style.color='#0ecb81';
-  if(_cpCurrentSym) loadCPChart(_cpCurrentSym, _cpCurrentDays);
-}
-
-function loadCompanyForecast(){
-  if(!_cpCurrentSym) return;
-  window.scrollTo({top:0,behavior:'smooth'});
-  var inp = document.getElementById('pair-input');
-  if(inp) inp.value = _cpCurrentSym;
-  setTimeout(function(){ if(typeof runForecast==='function') runForecast(); }, 300);
-}
-
-async function loadCPChart(sym, days){
-  var canvas = document.getElementById('cp-chart');
-  if(!canvas) return;
-  var to = new Date();
-  var from = new Date(to.getTime() - days*24*60*60*1000);
-  var toStr = to.toISOString().split('T')[0];
-  var fromStr = from.toISOString().split('T')[0];
-  var mult = days<=7?1:1, span = days<=7?'day':'day';
-  try {
-    var r = await fetch('https://api.polygon.io/v2/aggs/ticker/'+sym+'/range/'+mult+'/'+span+'/'+fromStr+'/'+toStr+'?adjusted=true&sort=asc&limit=365&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
-    var data = await r.json();
-    if(!data.results||!data.results.length) return;
-    var labels = data.results.map(function(d){
-      var dt = new Date(d.t);
-      return (dt.getMonth()+1)+'/'+(dt.getDate());
-    });
-    var prices = data.results.map(function(d){ return parseFloat(d.c.toFixed(2)); });
-    var isUp = prices[prices.length-1] >= prices[0];
-    var lineColor = isUp ? '#0ecb81' : '#f6465d';
-    var fillColor = isUp ? 'rgba(14,203,129,0.06)' : 'rgba(246,70,93,0.06)';
-    if(_cpChart){ try{_cpChart.destroy();}catch(e){} _cpChart=null; }
-    _cpChart = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: sym,
-          data: prices,
-          borderColor: lineColor,
-          backgroundColor: fillColor,
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          pointHoverBackgroundColor: lineColor,
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0b0f1a',
-            borderColor: '#1e2a40',
-            borderWidth: 1,
-            titleColor: '#607a99',
-            bodyColor: lineColor,
-            titleFont: { family: 'IBM Plex Mono', size: 10 },
-            bodyFont: { family: 'IBM Plex Mono', size: 11 },
-            callbacks: { label: function(ctx){ return ' $'+ctx.parsed.y.toFixed(2); } }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: 'rgba(30,42,64,0.5)' },
-            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }
-          },
-          y: {
-            grid: { color: 'rgba(30,42,64,0.5)' },
-            ticks: { color: '#344a66', font: { family: 'IBM Plex Mono', size: 9 }, callback: function(v){ return '$'+v.toFixed(0); } },
-            position: 'right'
-          }
-        }
-      }
-    });
-  } catch(e) { console.log('CP chart error:', e.message); }
-}
-
-async function loadCompanyProfile(sym){
-  if(!sym) return;
-  sym = sym.toUpperCase().trim();
-  _cpCurrentSym = sym;
-  document.getElementById('cp-input').value = sym;
-  var loading = document.getElementById('cp-loading');
-  var error   = document.getElementById('cp-error');
-  var content = document.getElementById('cp-content');
-  loading.style.display='block';
-  error.style.display='none';
-  content.style.display='none';
-  // Scroll to profile section
-  var sec = document.getElementById('company-profile-section');
-  if(sec) sec.scrollIntoView({behavior:'smooth', block:'start'});
-  try {
-    var r = await fetch('https://api.polygon.io/v3/reference/tickers/'+sym+'?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG');
-    var data = await r.json();
-    if(!data.results){ throw new Error('No data for '+sym); }
-    var d = data.results;
-    var initials = sym.substring(0,2).toUpperCase();
-    var colors = ['#0ecb81','#0af','#f0b90b','#a78bfa','#f6465d','#00b4d8'];
-    var col = colors[sym.charCodeAt(0)%colors.length];
-    // Logo circles
-    ['cp-logo','cp-logo2'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el){ el.textContent=initials; el.style.color=col; el.style.borderColor=col+'44'; el.style.background=col+'12'; }
-    });
-    // Header
-    setEl('cp-sym', sym);
-    setEl('cp-fullname', d.name||sym);
-    setEl('cp-fullname2', d.name||sym);
-    setEl('cp-exchange-badge', d.primary_exchange||'');
-    setEl('cp-exchange', d.primary_exchange||'—');
-    // Market cap
-    var mc = fmtMktCap(d.market_cap);
-    setEl('cp-mktcap', mc);
-    setEl('cp-mktcap2', mc);
-    // Details
-    setEl('cp-employees', fmtNum(d.total_employees));
-    setEl('cp-employees2', fmtNum(d.total_employees));
-    var listDate = d.list_date ? new Date(d.list_date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : '—';
-    setEl('cp-listed', listDate);
-    setEl('cp-listed2', listDate);
-    var shares = fmtShares(d.weighted_shares_outstanding||d.share_class_shares_outstanding);
-    setEl('cp-shares', shares);
-    setEl('cp-shares2', shares);
-    setEl('cp-industry', d.sic_description||d.type||'—');
-    setEl('cp-sic', d.sic_description||'—');
-    setEl('cp-phone', d.phone_number||'—');
-    // Website
-    var webEl = document.getElementById('cp-website');
-    if(webEl && d.homepage_url){
-      webEl.textContent = d.homepage_url.replace('https://','').replace('http://','').replace(/\/$/,'');
-      webEl.onclick = function(){ window.open(d.homepage_url,'_blank'); };
-    }
-    // Description
-    if(d.description){
-      var desc = d.description.length>280 ? d.description.substring(0,280)+'...' : d.description;
-      setEl('cp-desc', desc);
-    }
-    loading.style.display='none';
-    content.style.display='block';
-    // Load chart
-    loadCPChart(sym, _cpCurrentDays);
-  } catch(e) {
-    loading.style.display='none';
-    error.style.display='block';
-    error.textContent = 'Could not load company data for '+sym+'. Try another ticker.';
-    console.log('Company profile error:', e.message);
-  }
-}
-
-// Expose company profile functions globally
-window.loadCompanyProfile = loadCompanyProfile;
-window.loadCompanyForecast = loadCompanyForecast;
-window.cpSetPeriod = cpSetPeriod;
-// Auto-load triggered from main DOMContentLoaded
-
-</script>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"500","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"dark","locale":"en","isTransparent":false}</script>
       </div>
     </div>
   </div>
