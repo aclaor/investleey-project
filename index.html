@@ -913,7 +913,7 @@ function showModal(mode) {
   var err = document.getElementById('modal-err');
   var btn = document.getElementById('auth-submit-btn');
   if (title) title.textContent = mode==='login'?'SIGN IN':'CREATE ACCOUNT';
-  if (sub) sub.textContent = mode==='login'?'Welcome back to Investleey':'forever free · No credit card · Cancel anytime';
+  if (sub) sub.textContent = mode==='login'?'Welcome back to Investleey':'3-day full trial · No credit card · Cancel anytime';
   if (err) err.style.display='none';
   if (btn) btn.textContent = mode==='login'?'SIGN IN':'START FREE TRIAL';
   var planGrid = document.querySelector('.plan-grid');
@@ -1143,13 +1143,31 @@ async function runForecast(isAutoRun){
   var isAdmin = currentUser && currentUser.email === 'alexclaor@gmail.com';
   if(!currentUser && !isAdmin){
     var now=Date.now();
-    var sessionStart=parseInt(localStorage.getItem('inv_session_start')||'0');
-    var waitUntil=parseInt(localStorage.getItem('inv_wait_until')||'0');
-    if(waitUntil>now&&!isAutoRun){showTimeLimit(Math.ceil((waitUntil-now)/60000));return;}
-    if(!sessionStart){sessionStart=now;localStorage.setItem('inv_session_start',sessionStart);}
-    if(!isAutoRun){
-      var sessionMins=(now-sessionStart)/60000;
-      if(sessionMins>=120){localStorage.setItem('inv_wait_until',now+15*60*1000);localStorage.setItem('inv_session_start','0');showTimeLimit(15);return;}
+    // ── 3-day full access trial ──
+    var firstVisit=parseInt(localStorage.getItem('inv_first_visit')||'0');
+    if(!firstVisit){firstVisit=now;localStorage.setItem('inv_first_visit',firstVisit);}
+    var trialDays=3;
+    var trialEnd=firstVisit+(trialDays*24*60*60*1000);
+    var inTrial=now<trialEnd;
+    if(inTrial){
+      // Still in trial — unlimited access, just count forecasts
+      if(!isAutoRun){
+        var ifc=parseInt(localStorage.getItem('inv_session_start_fc')||'0')+1;
+        localStorage.setItem('inv_session_start_fc',ifc);
+      }
+      // Show trial banner once
+      var daysLeft=Math.ceil((trialEnd-now)/(24*60*60*1000));
+      if(!isAutoRun) showTrialBanner(daysLeft);
+    } else {
+      // Trial expired — switch to 2hr/day limit
+      var sessionStart=parseInt(localStorage.getItem('inv_session_start')||'0');
+      var waitUntil=parseInt(localStorage.getItem('inv_wait_until')||'0');
+      if(waitUntil>now&&!isAutoRun){showTimeLimit(Math.ceil((waitUntil-now)/60000));return;}
+      if(!sessionStart){sessionStart=now;localStorage.setItem('inv_session_start',sessionStart);}
+      if(!isAutoRun){
+        var sessionMins=(now-sessionStart)/60000;
+        if(sessionMins>=120){localStorage.setItem('inv_wait_until',now+15*60*1000);localStorage.setItem('inv_session_start','0');showTimeLimit(15);return;}
+      }
     }
   }
   var symbol=document.getElementById('pair-input').value.trim().toUpperCase().replace(/[\/\-\s]/g,'')||'AAPL';
@@ -1758,6 +1776,30 @@ function switchSTab(tab){
   }
 }
 // Track record synced directly in renderTrackRecord
+
+
+// ── 3-DAY TRIAL BANNER ───────────────────────────────────────
+var _trialBannerShown = false;
+function showTrialBanner(daysLeft){
+  if(_trialBannerShown) return;
+  _trialBannerShown = true;
+  // Update the live proof banner text
+  var pt = document.getElementById('proof-text');
+  if(pt && daysLeft > 0){
+    pt.textContent = '🎉 FREE TRIAL: ' + daysLeft + ' day' + (daysLeft===1?'':'s') + ' of unlimited access remaining!';
+    pt.style.color = '#0ecb81';
+    pt.style.fontWeight = '700';
+  }
+}
+function getTrialStatus(){
+  var firstVisit=parseInt(localStorage.getItem('inv_first_visit')||'0');
+  if(!firstVisit) return {inTrial:true, daysLeft:3, firstVisit:Date.now()};
+  var trialEnd=firstVisit+(3*24*60*60*1000);
+  var now=Date.now();
+  var inTrial=now<trialEnd;
+  var daysLeft=Math.max(0,Math.ceil((trialEnd-now)/(24*60*60*1000)));
+  return {inTrial:inTrial, daysLeft:daysLeft, firstVisit:firstVisit};
+}
 
 window.addEventListener('DOMContentLoaded',function(){
   fetchLiveTicker();
@@ -2483,8 +2525,8 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#607a99;margin-bottom:20px;line-height:1.8;">Get BULLISH/BEARISH signals for AAPL, NVDA, TSLA and 500+ US stocks</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
       <div style="background:#131926;border:1px solid #1e2a40;border-radius:8px;padding:10px;">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#0ecb81;font-weight:700;">✅ FREE</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;margin-top:3px;">2hrs/day forever</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#0ecb81;font-weight:700;">✅ FREE TRIAL</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;margin-top:3px;"><span style="color:#0ecb81;font-weight:700;">3 days unlimited</span> then 2hrs/day</div>
         <button onclick="closeSignupPopup();showModal('signup')" style="margin-top:8px;width:100%;padding:8px;background:rgba(14,203,129,0.15);border:1px solid #0ecb81;border-radius:6px;color:#0ecb81;font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;font-weight:700;">Start Free ⚡</button>
       </div>
       <div style="background:#131926;border:1px solid rgba(0,255,255,0.3);border-radius:8px;padding:10px;">
@@ -2501,14 +2543,6 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
         <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#0ecb81;font-weight:700;">💰 ANNUAL $9/mo</div>
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;margin-top:3px;">Save 47% — best value</div>
         <button onclick="closeSignupPopup();startPayPal('annual')" style="margin-top:8px;width:100%;padding:8px;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:6px;color:#000;font-family:'IBM Plex Mono',monospace;font-size:10px;cursor:pointer;font-weight:700;">Get Annual 💰</button>
-      </div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;margin-top:4px;">2hrs/day forever</div>
-        <button onclick="closeSignupPopup();showModal('signup')" style="margin-top:10px;width:100%;padding:10px;background:rgba(14,203,129,0.15);border:1px solid #0ecb81;border-radius:6px;color:#0ecb81;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;font-weight:700;">Start Free ⚡</button>
-      </div>
-      <div style="background:#131926;border:1px solid rgba(240,185,11,0.3);border-radius:8px;padding:12px;">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;font-weight:700;">⚡ PRO $17/mo</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;margin-top:4px;">Unlimited</div>
-        <button onclick="closeSignupPopup();startPayPal('pro')" style="margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#f0b90b,#ffd84d);border:none;border-radius:6px;color:#000;font-family:'IBM Plex Mono',monospace;font-size:11px;cursor:pointer;font-weight:700;">Go Pro ⚡</button>
       </div>
     </div>
   </div>
