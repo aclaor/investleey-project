@@ -525,7 +525,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 <div id="upgrade-prompt" style="display:none;margin:8px 10px;padding:12px;background:linear-gradient(135deg,#0a1f14,#0d1f2d);border:1px solid #0ecb81;border-radius:8px;font-family:'IBM Plex Mono',monospace;text-align:center;">
         <div style="font-size:10px;color:#0ecb81;font-weight:700;margin-bottom:4px;">⚡ UNLOCK UNLIMITED FORECASTS</div>
         <div id="upgrade-prompt-msg" style="font-size:9px;color:#607a99;margin-bottom:8px;line-height:1.6;">You've used <span id="up-used">0</span> of your free forecasts today</div>
-        <button onclick="showPricing()" style="width:100%;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:6px;padding:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#000;cursor:pointer;">🚀 Upgrade to Pro — $17/mo</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;"><button onclick="startPayPal('weekly')" style="background:linear-gradient(135deg,#0ff,#0af);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">🔥 $7/week</button><button onclick="startPayPal('pro')" style="background:linear-gradient(135deg,#f0b90b,#ffd84d);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">⚡ $17/mo</button></div><button onclick="showPricing()" style="width:100%;background:transparent;border:1px solid #0ecb81;border-radius:6px;padding:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0ecb81;cursor:pointer;">See all plans →</button>
         <div style="font-size:8px;color:#607a99;margin-top:4px;">Cancel anytime · No hidden fees</div>
       </div>
     <div class="pairs-header">
@@ -1045,8 +1045,8 @@ async function startPayPal(plan){
   window._selectedPlan = plan;
   if(!currentUser){localStorage.setItem('zeus_pending_plan',plan);closePricing();showModal('signup');showToast('Create account first!','success');return;}
   try{
-    var amount = plan === 'max' ? '49.00' : '17.00';
-    var desc = plan === 'max' ? 'Investleey Max - Monthly' : 'Investleey Pro - Monthly';
+    var amount = plan==='weekly'?'7.00':plan==='annual'?'9.00':plan==='max'?'49.00':'17.00';
+    var desc = plan==='weekly'?'Investleey Weekly':plan==='annual'?'Investleey Annual (Monthly)':plan==='max'?'Investleey Max':'Investleey Pro Monthly';
     var r=await fetch(API_BASE+'/paypal/create-order',{method:'POST',headers:{'Content-Type':'application/json',...getAuthHeaders()},body:JSON.stringify({user_id:currentUser?currentUser.id:'',email:currentUser?currentUser.email:'',amount:amount,description:desc})});
     var d=await r.json();
     if(d.approve_url)window.location.href=d.approve_url;
@@ -2521,19 +2521,39 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     </div>
     <div style="text-align:center;margin-bottom:16px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;">⭐ Join 500+ traders already using ZEUS-AI</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-      <div class="plan-card" style="flex:1;min-width:160px;max-width:220px;">
+
+      <!-- FREE -->
+      <div class="plan-card" style="flex:1;min-width:150px;max-width:200px;">
         <div class="plan-name2">Free</div>
         <div class="plan-price2">$0<small>/forever</small></div>
         <ul class="plan-features">
-          <li>2 hrs/day free usage</li>
+          <li>2 hrs/day free</li>
           <li>All intervals (1m–1D)</li>
-          <li>All major stocks</li>
+          <li>All stocks &amp; ETFs</li>
           <li>AI signal (Bull/Bear)</li>
           <li class="no">Unlimited usage</li>
         </ul>
         <button class="plan-btn free-btn" onclick="closePricing();showModal('signup')">START FREE</button>
       </div>
-      <div class="plan-card featured" style="flex:1;min-width:160px;max-width:220px;">
+
+      <!-- WEEKLY -->
+      <div class="plan-card" style="flex:1;min-width:150px;max-width:200px;">
+        <span class="plan-badge2" style="background:rgba(0,255,255,0.12);color:#0ff;">🔥 TRY IT</span>
+        <div class="plan-name2">Weekly</div>
+        <div class="plan-price2">$7<small>/week</small></div>
+        <ul class="plan-features">
+          <li>Unlimited forecasts</li>
+          <li>All intervals (1m–1D)</li>
+          <li>All stocks &amp; ETFs</li>
+          <li>Full AI suite</li>
+          <li>No commitment</li>
+        </ul>
+        <button class="plan-btn" style="background:linear-gradient(135deg,#0ff,#0af);color:#000;border:none;padding:12px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;width:100%;" onclick="startPayPal('weekly')">GET WEEKLY ⚡</button>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Cancel anytime · Instant access</div>
+      </div>
+
+      <!-- PRO MONTHLY — FEATURED -->
+      <div class="plan-card featured" style="flex:1;min-width:150px;max-width:200px;">
         <span class="plan-badge2 hot">⚡ POPULAR</span>
         <div class="plan-name2">Pro</div>
         <div class="plan-price2">$17<small>/mo</small></div>
@@ -2548,20 +2568,24 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
         <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Cancel anytime · Instant access</div>
         <div id="paypal-btn-container"></div>
       </div>
-      <div class="plan-card" style="flex:1;min-width:160px;max-width:220px;border-color:#f0b90b;">
-        <span class="plan-badge2" style="background:#f0b90b;color:#000;">👑 MAX</span>
-        <div class="plan-name2" style="color:#f0b90b;">Max</div>
-        <div class="plan-price2">$49<small>/mo</small></div>
+
+      <!-- ANNUAL -->
+      <div class="plan-card" style="flex:1;min-width:150px;max-width:200px;border-color:#0ecb81;">
+        <span class="plan-badge2" style="background:rgba(14,203,129,0.15);color:#0ecb81;">💰 BEST VALUE</span>
+        <div class="plan-name2" style="color:#0ecb81;">Annual</div>
+        <div class="plan-price2">$9<small>/mo</small></div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0ecb81;margin-bottom:8px;">Billed $108/year · Save 47%</div>
         <ul class="plan-features">
-          <li>Everything in Pro</li>
-          <li>5x more AI capacity</li>
-          <li>Early access features</li>
-          <li>Dedicated support</li>
-          <li>Priority at high traffic</li>
+          <li>Unlimited forecasts</li>
+          <li>All intervals (1m–1D)</li>
+          <li>All stocks &amp; ETFs</li>
+          <li>Full AI suite</li>
+          <li>Priority support</li>
         </ul>
-        <button class="plan-btn" style="background:linear-gradient(90deg,#f0b90b,#ff9900);color:#000;border:none;padding:10px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;width:100%;" onclick="startPayPal('max')">GET MAX 👑</button>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Cancel anytime · Instant access</div>
+        <button class="plan-btn" style="background:linear-gradient(135deg,#0ecb81,#00b4d8);color:#000;border:none;padding:12px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;width:100%;" onclick="startPayPal('annual')">GET ANNUAL 💰</button>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#344a66;margin-top:6px;text-align:center;">Best value · Cancel anytime</div>
       </div>
+
     </div>
   </div>
 </div>
@@ -2616,6 +2640,10 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
     </div>
     <div style="font-size:11px;color:#607a99;text-align:center;margin-bottom:16px;">Try it FREE — no credit card required</div>
     <button onclick="closeExitPopup();showModal('signup')" style="width:100%;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:8px;padding:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#000;cursor:pointer;margin-bottom:8px;">🚀 Start Free — See My First Forecast</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <button onclick="closeExitPopup();startPayPal('weekly')" style="padding:10px;background:linear-gradient(135deg,#0ff,#0af);border:none;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#000;cursor:pointer;">🔥 Try Weekly $7</button>
+      <button onclick="closeExitPopup();startPayPal('annual')" style="padding:10px;background:linear-gradient(135deg,#0ecb81,#00b4d8);border:none;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#000;cursor:pointer;">💰 Annual $9/mo</button>
+    </div>
     <button onclick="closeExitPopup()" style="width:100%;background:none;border:1px solid #1e2a40;border-radius:8px;padding:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;cursor:pointer;">No thanks, I don't want accurate forecasts</button>
   </div>
 </div>
