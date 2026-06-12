@@ -1824,7 +1824,7 @@ window.addEventListener('DOMContentLoaded',function(){
   document.getElementById('pair-input').value='AAPL';
   setTimeout(function(){runForecast(true);},1500);
   setTimeout(renderStockGrid,500);
-  setTimeout(function(){loadCompanyProfile('AAPL');},2500);
+  setTimeout(function(){if(!_cpCurrentSym&&typeof loadCompanyProfile==='function')loadCompanyProfile('AAPL');},2500);
   setTimeout(function(){renderAllStockGrids().catch(function(e){console.log(e);});},500);
   setInterval(function(){renderAllStockGrids().catch(function(e){console.log(e);});},120000);
   setTimeout(drawMiniCharts,800);
