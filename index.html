@@ -1471,7 +1471,7 @@ function renderAll(data) {
   // Conversion features
   checkEmailCapture();
   updateUpgradePrompt();
-  if(typeof loadCompanyProfile==='function'&&sym&&sym!==_cpCurrentSym)loadCompanyProfile(sym);
+  if(typeof loadCompanyProfile==='function'&&sym)loadCompanyProfile(sym);
 }
 
 async function renderAllStockGrids(){
