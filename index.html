@@ -415,7 +415,7 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
   <div class="pair-info">
     <div>
       <div class="pair-name" id="hdr-pair">AAPL</div>
-      <div class="pair-sub">Apple Inc.</div>
+      <div class="pair-sub" id="hdr-company">—</div>
     </div>
     <div>
       <div class="pair-price-big" id="hdr-price">—</div>
@@ -1461,6 +1461,16 @@ function renderAll(data) {
   if(el('hdr-chg2')){el('hdr-chg2').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg2').style.color=isUp?'var(--green)':'var(--red)';}
   renderChart(data);renderOrderBook(data.last_close);renderTrades(data.last_close);
   document.getElementById('pair-input').value=sym;
+  // Update company name in header
+  var hdrCo = document.getElementById('hdr-company');
+  if(hdrCo) hdrCo.textContent = sym;
+  // Fetch company name from Polygon async (non-blocking)
+  if(hdrCo && sym){
+    fetch('https://api.polygon.io/v3/reference/tickers/'+sym+'?apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.results&&d.results.name&&document.getElementById('hdr-company'))document.getElementById('hdr-company').textContent=d.results.name;})
+    .catch(function(){});
+  }
   // Signal panel
   var _sigFull = signalName==='bull'?'BULLISH':signalName==='bear'?'BEARISH':'NEUTRAL';
   updateSignalPanel(data, _sigFull, currentInterval);
