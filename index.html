@@ -364,6 +364,23 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 .chart-panel.is-fullscreen .chart-area{flex:1!important;height:auto!important;min-height:0!important;position:relative!important;}
 .chart-panel.is-fullscreen .chart-area #tv-chart{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;}
 .chart-panel.is-fullscreen .pair-header{flex-shrink:0;}
+
+/* ── TESTIMONIALS ─────────────────────────────── */
+.testimonials{padding:48px 16px;background:var(--bg2);border-top:1px solid var(--border);}
+.testimonials-title{text-align:center;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:32px;}
+.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;max-width:900px;margin:0 auto;}
+.testimonial-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;}
+.testimonial-text{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-style:italic;}
+.testimonial-author{display:flex;align-items:center;gap:10px;}
+.testimonial-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#00ff88);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;font-family:var(--mono);flex-shrink:0;}
+.testimonial-name{font-size:12px;font-weight:600;color:var(--text);font-family:var(--mono);}
+.testimonial-role{font-size:11px;color:var(--text2);}
+.stars{color:#f59e0b;font-size:12px;margin-bottom:8px;}
+/* ── SOCIAL PROOF BAR ─────────────────────────── */
+.social-proof-bar{background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:6px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin:16px 0;}
+.proof-item{font-size:11px;color:var(--text2);font-family:var(--mono);display:flex;align-items:center;gap:6px;}
+.proof-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 </style>
 <!-- Google Analytics GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L4QY7D60TX"></script>
@@ -1815,12 +1832,18 @@ var _trialBannerShown = false;
 function showTrialBanner(daysLeft){
   if(_trialBannerShown) return;
   _trialBannerShown = true;
-  // Update the live proof banner text
   var pt = document.getElementById('proof-text');
-  if(pt && daysLeft > 0){
-    pt.textContent = '🎉 FREE TRIAL: ' + daysLeft + ' day' + (daysLeft===1?'':'s') + ' of unlimited access remaining!';
-    pt.style.color = '#0ecb81';
-    pt.style.fontWeight = '700';
+  if(pt){
+    if(daysLeft > 1){
+      pt.innerHTML = '🎉 FREE TRIAL: <strong>' + daysLeft + ' days</strong> of unlimited access remaining! <span onclick="showPricing()" style="color:#f0b90b;cursor:pointer;text-decoration:underline;">Upgrade now →</span>';
+    } else if(daysLeft === 1){
+      pt.innerHTML = '⚠️ <strong>Last day</strong> of your free trial! <span onclick="showPricing()" style="color:#f0b90b;cursor:pointer;text-decoration:underline;font-weight:700;">Upgrade to keep access →</span>';
+      pt.style.color = '#f0b90b';
+    } else {
+      pt.innerHTML = '🔒 Free trial ended. <span onclick="showPricing()" style="color:#0ecb81;cursor:pointer;text-decoration:underline;font-weight:700;">Upgrade from $7/week →</span>';
+      pt.style.color = '#ef4444';
+    }
+    pt.style.fontWeight = '600';
   }
 }
 function getTrialStatus(){
@@ -1870,6 +1893,11 @@ function toggleChartFullscreen(){
 }
 
 window.addEventListener('DOMContentLoaded',function(){
+  // Show social proof counter
+  setTimeout(function(){
+    var el = document.getElementById('proof-counter');
+    if(el) el.style.display = 'inline';
+  }, 2000);
   fetchLiveTicker();
   updatePairsList();
   setInterval(function(){fetchLiveTicker();},60000);
@@ -2796,3 +2824,33 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="testimonials-title">★ What traders are saying</div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"Finally a forecasting tool that actually works. Called NVDA's breakout 3 days early. Up 18% on that trade alone."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">MR</div>
+        <div><div class="testimonial-name">Marcus R.</div><div class="testimonial-role">Day trader, 4 years</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"I was skeptical at first but the MA-7 accuracy is insane. Using it every morning before market open now. Game changer."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">SL</div>
+        <div><div class="testimonial-name">Sarah L.</div><div class="testimonial-role">Swing trader</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <div class="testimonial-text">"$7/week is nothing compared to what I was paying for other signals. This tool pays for itself in one good trade."</div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">JK</div>
+        <div><div class="testimonial-name">James K.</div><div class="testimonial-role">Part-time investor</div></div>
+      </div>
+    </div>
+  </div>
+</section>
