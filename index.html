@@ -124,8 +124,6 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 .stat-label{font-size:10px;color:var(--text2);}
 .stat-val{font-size:12px;font-family:var(--mono);}
 .main-layout{display:block;overflow:visible;}
-.side-slim{padding:12px 12px 0;}
-.side-slim #upgrade-prompt{margin:0!important;max-width:520px;}
 .widgets-col{display:flex;flex-direction:column;gap:12px;padding:12px;min-width:0;}
 .widgets-col .chart-panel{flex:0 0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,17vw,230px);height:clamp(460px,58vh,600px);}
 .panel-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;}
@@ -472,14 +470,6 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
   </div>
 </div>
 <div class="main-layout">
-  <div class="side-slim">
-<div id="upgrade-prompt" style="display:none;margin:8px 10px;padding:12px;background:linear-gradient(135deg,#0a1f14,#0d1f2d);border:1px solid #0ecb81;border-radius:8px;font-family:'IBM Plex Mono',monospace;text-align:center;">
-        <div style="font-size:10px;color:#0ecb81;font-weight:700;margin-bottom:4px;">⚡ UNLOCK UNLIMITED FORECASTS</div>
-        <div id="upgrade-prompt-msg" style="font-size:9px;color:#607a99;margin-bottom:8px;line-height:1.6;">You've used <span id="up-used">0</span> of your free forecasts today</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;"><button onclick="startPayPal('weekly')" style="background:linear-gradient(135deg,#0ff,#0af);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">🔥 $7/week</button><button onclick="startPayPal('pro')" style="background:linear-gradient(135deg,#f0b90b,#ffd84d);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">⚡ $17/mo</button></div><button onclick="showPricing()" style="width:100%;background:transparent;border:1px solid #0ecb81;border-radius:6px;padding:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0ecb81;cursor:pointer;">See all plans →</button>
-        <div style="font-size:8px;color:#607a99;margin-top:4px;">Cancel anytime · No hidden fees</div>
-      </div>
-  </div>
   <div class="widgets-col">
   <div class="chart-panel" data-widget="1">
     <div class="panel-main">
@@ -1712,7 +1702,6 @@ function renderAll(idx, data) {
   saveTrackRecord(sym, w.currentInterval, _sigFull, data.last_close, _tgt);
   // Conversion features
   checkEmailCapture();
-  updateUpgradePrompt();
   if(typeof loadCompanyProfile==='function'&&sym)loadCompanyProfile(sym);
 }
 
@@ -2357,28 +2346,6 @@ function checkEmailCapture(){
 }
 
 // ── UPGRADE PROMPT ────────────────────────────────────────
-function updateUpgradePrompt(){
-  var prompt = document.getElementById('upgrade-prompt');
-  if(!prompt) return;
-  // Only show to non-pro users
-  if(currentUser && currentUser.plan === 'pro'){ prompt.style.display='none'; return; }
-  // Count forecasts
-  var count = parseInt(localStorage.getItem('forecast_count') || '0');
-  var upUsed = document.getElementById('up-used');
-  var upMsg  = document.getElementById('upgrade-prompt-msg');
-  if(upUsed) upUsed.textContent = count;
-  if(count >= 1){
-    prompt.style.display='block';
-    if(upMsg){
-      if(count === 1)
-        upMsg.innerHTML = 'Great signal! Run <strong style="color:#0ecb81;">unlimited forecasts</strong> with Pro';
-      else if(count === 2)
-        upMsg.innerHTML = 'You\'re on a roll! Upgrade to never hit the daily limit';
-      else
-        upMsg.innerHTML = 'You\'ve run <span id="up-used2">'+count+'</span> forecasts — Pro gives you unlimited access';
-    }
-  }
-}
 
 function toggleFAQ(){var c=document.getElementById('faq-content'),a=document.getElementById('faq-arrow');if(c.style.display==='none'){c.style.display='block';if(a)a.textContent='▲';}else{c.style.display='none';if(a)a.textContent='▼';}}
 var _miLoaded={earnings:false,splits:false,dividends:false,ipo:false,economic:false,gainers:false};
