@@ -1709,7 +1709,7 @@ function renderAll(idx, data) {
   // Track record
   var _fc7 = data.forecast_ma7 || [];
   var _tgt = _fc7.length > 0 ? _fc7[_fc7.length-1] : data.last_close;
-  saveTrackRecord(sym, currentInterval, _sigFull, data.last_close, _tgt);
+  saveTrackRecord(sym, w.currentInterval, _sigFull, data.last_close, _tgt);
   // Conversion features
   checkEmailCapture();
   updateUpgradePrompt();
