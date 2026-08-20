@@ -123,7 +123,21 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
 .stat{display:flex;flex-direction:column;gap:2px;}
 .stat-label{font-size:10px;color:var(--text2);}
 .stat-val{font-size:12px;font-family:var(--mono);}
-.main-layout{display:grid;grid-template-columns:220px 1fr 280px;height:calc(100vh - 170px);overflow:hidden;z-index:1;}
+.main-layout{display:block;overflow:visible;}
+.side-slim{padding:12px 12px 0;}
+.side-slim #upgrade-prompt{margin:0!important;max-width:520px;}
+.widgets-col{display:flex;flex-direction:column;gap:12px;padding:12px;min-width:0;}
+.widgets-col .chart-panel{flex:0 0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,17vw,230px);height:clamp(460px,58vh,600px);}
+.panel-main{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;}
+.panel-pairs{display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--bg2);min-width:0;min-height:0;overflow:hidden;}
+.quote-tab-bar-w{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);padding:0 6px;}
+.quote-tab-bar-w::-webkit-scrollbar{display:none;}
+.widget-tag{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;padding:0 8px;flex-shrink:0;}
+.widgets-col .chart-panel .chart-area{flex:1 1 auto;height:auto;min-height:0;}
+.widgets-col .chart-panel .trades-panel{flex:0 0 auto;height:170px;}
+.widgets-col .chart-panel .chart-controls{background:var(--bg3);border-bottom:1px solid var(--border);}
+.pairs-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;}
+@media(max-width:640px){.widgets-col .chart-panel{grid-template-columns:1fr!important;height:auto!important;}.panel-pairs{border-left:none;border-top:1px solid var(--border);height:200px;}}
 .ob-panel{display:flex;flex-direction:column;background:var(--bg2);border-right:1px solid var(--border);overflow:hidden;}
 .ob-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);}
 .ob-title{font-size:11px;font-weight:700;letter-spacing:0.5px;}
@@ -458,118 +472,297 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
   </div>
 </div>
 <div class="main-layout">
-  <div class="ob-panel">
-    <div class="ob-header"><span class="ob-title">ORDER BOOK</span></div>
-    <div class="ob-cols"><span>Price(USD)</span><span style="text-align:right">Amount</span><span style="text-align:right">Total</span></div>
-    <div class="ob-list" id="asks-list" style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;"></div>
-    <div class="ob-spread"><span class="ob-spread-label">Spread</span><span class="ob-spread-val" id="ob-spread-val">—</span></div>
-    <div class="ob-list" id="bids-list" style="flex:1;"></div>
-  </div>
-  <div class="chart-panel">
-    <div class="chart-controls">
-      <div class="interval-tabs">
-        <button class="itab" onclick="setTab(this)">1m</button>
-        <button class="itab" onclick="setTab(this)">5m</button>
-        <button class="itab" onclick="setTab(this)">15m</button>
-        <button class="itab" onclick="setTab(this)">1H</button>
-        <button class="itab" onclick="setTab(this)">4H</button>
-        <button class="itab active" onclick="setTab(this)">1D</button>
-      </div>
-      <div class="chart-divider"></div>
-      <div class="quote-tabs">
-        <button class="qtab active" onclick="setQuote(this,'TECH')">TECH</button>
-        <button class="qtab" onclick="setQuote(this,'FINANCE')">FINANCE</button>
-        <button class="qtab" onclick="setQuote(this,'HEALTH')">HEALTH</button>
-        <button class="qtab" onclick="setQuote(this,'ENERGY')">ENERGY</button>
-        <button class="qtab" onclick="setQuote(this,'ETFS')">ETFs</button>
-      </div>
-      <div class="search-wrap">
-        <span style="color:var(--text3);">⚲</span>
-        <input type="text" id="pair-input" value="AAPL" placeholder="e.g. AAPL, TSLA, MSFT..."
-          oninput="this.value=this.value.toUpperCase()"
-          onkeydown="if(event.key==='Enter')runForecast()">
-      </div>
-      <button class="run-btn" id="run-btn" onclick="runForecast()">▶ ZEUS-AI</button>
-      <div class="zoom-btns" style="margin-left:6px;">
-        <button class="zbtn" onclick="zoomChart(-1)" title="Zoom In">+</button>
-        <button class="zbtn" onclick="zoomChart(1)" title="Zoom Out">−</button>
-        <button class="zbtn" onclick="resetZoom()" style="font-size:11px;width:30px;" title="Reset">⟳</button>
-        <button class="zbtn fullscreen-btn" onclick="toggleChartFullscreen()" title="Toggle fullscreen" style="width:30px;font-size:13px;">⛶</button>
-      </div>
-      <div class="zeus-tag"><div class="zeus-dot"></div>ZEUS-AI · PROPRIETARY</div>
-    </div>
-    <div class="chart-area">
-      <div id="tv-chart" style="position:absolute;inset:0;width:100%;height:100%;"></div>
-      <div class="chart-overlay" id="chart-overlay">
-        <div class="spinner"></div>
-        <div class="overlay-text">ZEUS-AI COMPUTING...</div>
-      </div>
-      <div class="forecast-badge" id="fc-badge" style="display:none;">
-        <span class="fc-pill" id="fc-pill-1" style="color:var(--green);">—</span>
-        <span class="fc-pill" id="fc-pill-2" style="color:var(--accent);">—</span>
-      </div>
-      <!-- Persistent signup banner on chart -->
-      <div id="chart-signup-banner" style="display:none!important;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;background:rgba(6,8,16,0.95);border:1px solid rgba(14,203,129,0.5);border-radius:10px;padding:16px 20px;backdrop-filter:blur(8px);text-align:center;width:90%;max-width:420px;box-sizing:border-box;">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0ecb81;margin-bottom:6px;letter-spacing:1px;text-shadow:0 0 10px rgba(14,203,129,0.4);">⚡ UNLOCK UNLIMITED AI FORECASTS</div>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:12px;">Free forever (2hrs/day) · No credit card · Cancel anytime</div>
-        <button onclick="showModal('signup')" style="background:linear-gradient(135deg,#0ecb81,#00ff88);border:none;border-radius:6px;padding:10px 28px;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#000;cursor:pointer;letter-spacing:0.5px;">START FREE TRIAL ⚡</button>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#607a99;margin-top:8px;">⭐ Join 500+ traders · No credit card · Cancel anytime</div>
-      </div>
-    </div>
-    <div class="trades-panel">
-      <div class="trades-header">
-        <span class="trades-tab active" id="trades-main-tab">Market Trades</span>
-      </div>
-      <div class="trades-cols"><span>Price(USD)</span><span>Amount</span><span>Time</span></div>
-      <div class="trades-list" id="trades-list"></div>
-      <!-- Signal and Track Record panels (hidden here, shown in dedicated box below) -->
-      <div id="record-panel" style="display:none;"></div>
-      <div id="signal-panel" style="display:none;"></div>
-    </div>
-  </div>
-  <div class="right-panel">
-    <div class="zeus-panel">
-      <div class="zeus-title">ZEUS-AI Prediction · 60H</div>
-      <div class="zeus-price-card">
-        <div class="zeus-price-label">FORECAST TARGET</div>
-        <div class="zeus-price-val" id="fc-price">—</div>
-        <div class="zeus-price-sub" id="fc-chg">Run ZEUS-AI to see prediction</div>
-        <div class="conf-row" style="margin-top:8px;"><span>Confidence</span><span id="fc-conf">—</span></div>
-        <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
-        <div class="sigs">
-          <div class="sig bull" id="sig-bull">▲ BULL</div>
-          <div class="sig neut active" id="sig-neut">● NEUT</div>
-          <div class="sig bear" id="sig-bear">▼ BEAR</div>
-        </div>
-      </div>
-      <div class="acc-grid">
-        <div class="acc-card"><div class="acc-label">MA-7 Acc</div><div class="acc-val" id="m-acc7">—</div></div>
-        <div class="acc-card"><div class="acc-label">MA-25 Acc</div><div class="acc-val" id="m-acc25">—</div></div>
-        <div class="acc-card"><div class="acc-label">MA-3 Acc</div><div class="acc-val" id="m-acc3">—</div></div>
-        <div class="acc-card"><div class="acc-label">VWAP Acc</div><div class="acc-val" id="m-accv">—</div></div>
-      </div>
-    </div>
+  <div class="side-slim">
 <div id="upgrade-prompt" style="display:none;margin:8px 10px;padding:12px;background:linear-gradient(135deg,#0a1f14,#0d1f2d);border:1px solid #0ecb81;border-radius:8px;font-family:'IBM Plex Mono',monospace;text-align:center;">
         <div style="font-size:10px;color:#0ecb81;font-weight:700;margin-bottom:4px;">⚡ UNLOCK UNLIMITED FORECASTS</div>
         <div id="upgrade-prompt-msg" style="font-size:9px;color:#607a99;margin-bottom:8px;line-height:1.6;">You've used <span id="up-used">0</span> of your free forecasts today</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px;"><button onclick="startPayPal('weekly')" style="background:linear-gradient(135deg,#0ff,#0af);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">🔥 $7/week</button><button onclick="startPayPal('pro')" style="background:linear-gradient(135deg,#f0b90b,#ffd84d);border:none;border-radius:6px;padding:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;color:#000;cursor:pointer;">⚡ $17/mo</button></div><button onclick="showPricing()" style="width:100%;background:transparent;border:1px solid #0ecb81;border-radius:6px;padding:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#0ecb81;cursor:pointer;">See all plans →</button>
         <div style="font-size:8px;color:#607a99;margin-top:4px;">Cancel anytime · No hidden fees</div>
       </div>
-    <div class="pairs-header">
-      <div class="pairs-search">
-        <span style="color:var(--text3);font-size:11px;">⚲</span>
-        <input type="text" placeholder="Search..." oninput="filterPairs(this.value)">
+  </div>
+  <div class="widgets-col">
+  <div class="chart-panel" data-widget="1">
+    <div class="panel-main">
+    <div class="chart-controls">
+      <span class="widget-tag">#1</span>
+      <div class="interval-tabs">
+        <button class="itab" data-widget="1" onclick="setTab(this,1)">1m</button>
+        <button class="itab" data-widget="1" onclick="setTab(this,1)">5m</button>
+        <button class="itab" data-widget="1" onclick="setTab(this,1)">15m</button>
+        <button class="itab" data-widget="1" onclick="setTab(this,1)">1H</button>
+        <button class="itab" data-widget="1" onclick="setTab(this,1)">4H</button>
+        <button class="itab active" data-widget="1" onclick="setTab(this,1)">1D</button>
+      </div>
+      <div class="chart-divider"></div>
+      <div class="search-wrap">
+        <span style="color:var(--text3);">&#8890;</span>
+        <input type="text" id="pair-input-1" value="AAPL" placeholder="e.g. AAPL, TSLA"
+          oninput="this.value=this.value.toUpperCase()"
+          onfocus="lastActiveWidget=1"
+          onkeydown="if(event.key==='Enter')runForecast(1)">
+      </div>
+      <button class="run-btn" id="run-btn-1" onclick="runForecast(1)">&#9654; ZEUS-AI</button>
+      <div class="zoom-btns" style="margin-left:6px;">
+        <button class="zbtn" onclick="zoomChart(-1,1)" title="Zoom In">+</button>
+        <button class="zbtn" onclick="zoomChart(1,1)" title="Zoom Out">&#8722;</button>
+        <button class="zbtn" onclick="resetZoom(1)" style="font-size:11px;width:30px;" title="Reset">&#10227;</button>
+        <button class="zbtn fullscreen-btn" id="fsbtn-1" onclick="toggleChartFullscreen(1)" title="Toggle fullscreen" style="width:30px;font-size:13px;">&#9974;</button>
       </div>
     </div>
-    <div style="display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);padding:0 8px;gap:0;" id="quote-tab-bar">
-      <button onclick="setQuote(this,'TECH')" class="qtab2 active">TECH</button>
-      <button onclick="setQuote(this,'FINANCE')" class="qtab2">FINANCE</button>
-      <button onclick="setQuote(this,'HEALTH')" class="qtab2">HEALTH</button>
-      <button onclick="setQuote(this,'ENERGY')" class="qtab2">ENERGY</button>
-      <button onclick="setQuote(this,'ETFS')" class="qtab2">ETFs</button>
+    <div class="chart-area">
+      <div id="tv-chart-1" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+      <div class="chart-overlay" id="chart-overlay-1">
+        <div id="overlay-spinner-1" class="spinner" style="display:none;"></div>
+        <div id="overlay-icon-1" style="font-size:26px;">&#128200;</div>
+        <div class="overlay-text" id="overlay-text-1">CLICK &#9654; ZEUS-AI TO FORECAST</div>
+      </div>
+      <div class="forecast-badge" id="fc-badge-1" style="display:none;">
+        <span class="fc-pill" id="fc-pill-1-a" style="color:var(--green);">&#8212;</span>
+        <span class="fc-pill" id="fc-pill-1-b" style="color:var(--accent);">&#8212;</span>
+      </div>
     </div>
-    <div class="pairs-cols"><span>Symbol</span><span>Price</span><span>Change</span></div>
-    <div class="pairs-list" id="pairs-list" style="overflow-y:auto;flex:1;"></div>
+    <div class="trades-panel">
+      <div class="trades-header">
+        <span class="trades-tab active" data-widget="1" data-tab="signal">Signal</span>
+        <span class="trades-tab" data-widget="1" data-tab="record" style="margin-left:12px;">Track Record</span>
+      </div>
+      <div id="signal-panel-1" style="display:block;padding:12px 10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="text-align:center;margin-bottom:10px;">
+          <div id="sig-direction-1" style="font-size:18px;font-weight:700;padding:10px 16px;border-radius:8px;display:inline-block;border:2px solid #1e2a40;background:#0b0f1a;min-width:160px;">&#8212;</div>
+          <div style="font-size:9px;color:#607a99;letter-spacing:2px;margin-top:6px;">FORECAST DIRECTION</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">CONFIDENCE</div>
+            <div id="sig-conf-1" style="font-size:14px;font-weight:700;color:#0ecb81;">&#8212;</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">TIMEFRAME</div>
+            <div id="sig-interval-1" style="font-size:14px;font-weight:700;color:#00ffff;">&#8212;</div>
+          </div>
+        </div>
+        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;margin-bottom:8px;">
+          <div style="font-size:9px;color:#607a99;margin-bottom:4px;">AI TARGET PRICE</div>
+          <div id="sig-target-1" style="font-size:16px;font-weight:700;color:#f0b90b;">&#8212;</div>
+        </div>
+        <div id="sig-advice-1" style="font-size:9px;color:#607a99;text-align:center;line-height:1.8;padding:8px;background:#0b0f1a;border-radius:4px;border:1px solid #1e2a40;">
+          Run a forecast to see your signal
+        </div>
+      </div>
+      <div id="record-panel-1" style="display:none;padding:10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="font-size:9px;color:#607a99;letter-spacing:2px;text-align:center;margin-bottom:8px;">AI FORECAST TRACK RECORD</div>
+        <div id="record-list-1" style="font-size:10px;">
+          <div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="panel-pairs">
+      <div class="pairs-header">
+        <div class="pairs-search">
+          <span style="color:var(--text3);font-size:11px;">&#8890;</span>
+          <input type="text" placeholder="Search..." oninput="filterPairs(1, this.value)">
+        </div>
+      </div>
+      <div class="quote-tab-bar-w">
+        <button onclick="setQuoteFor(1,this,'TECH')" class="qtab2 active">TECH</button>
+        <button onclick="setQuoteFor(1,this,'FINANCE')" class="qtab2">FINANCE</button>
+        <button onclick="setQuoteFor(1,this,'HEALTH')" class="qtab2">HEALTH</button>
+        <button onclick="setQuoteFor(1,this,'ENERGY')" class="qtab2">ENERGY</button>
+        <button onclick="setQuoteFor(1,this,'ETFS')" class="qtab2">ETFs</button>
+      </div>
+      <div class="pairs-cols"><span>Symbol</span><span>Price</span><span>Change</span></div>
+      <div class="pairs-list" id="pairs-list-1"></div>
+    </div>
+  </div>
+  <div class="chart-panel" data-widget="2">
+    <div class="panel-main">
+    <div class="chart-controls">
+      <span class="widget-tag">#2</span>
+      <div class="interval-tabs">
+        <button class="itab" data-widget="2" onclick="setTab(this,2)">1m</button>
+        <button class="itab" data-widget="2" onclick="setTab(this,2)">5m</button>
+        <button class="itab" data-widget="2" onclick="setTab(this,2)">15m</button>
+        <button class="itab" data-widget="2" onclick="setTab(this,2)">1H</button>
+        <button class="itab" data-widget="2" onclick="setTab(this,2)">4H</button>
+        <button class="itab active" data-widget="2" onclick="setTab(this,2)">1D</button>
+      </div>
+      <div class="chart-divider"></div>
+      <div class="search-wrap">
+        <span style="color:var(--text3);">&#8890;</span>
+        <input type="text" id="pair-input-2" value="MSFT" placeholder="e.g. AAPL, TSLA"
+          oninput="this.value=this.value.toUpperCase()"
+          onfocus="lastActiveWidget=2"
+          onkeydown="if(event.key==='Enter')runForecast(2)">
+      </div>
+      <button class="run-btn" id="run-btn-2" onclick="runForecast(2)">&#9654; ZEUS-AI</button>
+      <div class="zoom-btns" style="margin-left:6px;">
+        <button class="zbtn" onclick="zoomChart(-1,2)" title="Zoom In">+</button>
+        <button class="zbtn" onclick="zoomChart(1,2)" title="Zoom Out">&#8722;</button>
+        <button class="zbtn" onclick="resetZoom(2)" style="font-size:11px;width:30px;" title="Reset">&#10227;</button>
+        <button class="zbtn fullscreen-btn" id="fsbtn-2" onclick="toggleChartFullscreen(2)" title="Toggle fullscreen" style="width:30px;font-size:13px;">&#9974;</button>
+      </div>
+    </div>
+    <div class="chart-area">
+      <div id="tv-chart-2" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+      <div class="chart-overlay" id="chart-overlay-2">
+        <div id="overlay-spinner-2" class="spinner" style="display:none;"></div>
+        <div id="overlay-icon-2" style="font-size:26px;">&#128200;</div>
+        <div class="overlay-text" id="overlay-text-2">CLICK &#9654; ZEUS-AI TO FORECAST</div>
+      </div>
+      <div class="forecast-badge" id="fc-badge-2" style="display:none;">
+        <span class="fc-pill" id="fc-pill-2-a" style="color:var(--green);">&#8212;</span>
+        <span class="fc-pill" id="fc-pill-2-b" style="color:var(--accent);">&#8212;</span>
+      </div>
+    </div>
+    <div class="trades-panel">
+      <div class="trades-header">
+        <span class="trades-tab active" data-widget="2" data-tab="signal">Signal</span>
+        <span class="trades-tab" data-widget="2" data-tab="record" style="margin-left:12px;">Track Record</span>
+      </div>
+      <div id="signal-panel-2" style="display:block;padding:12px 10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="text-align:center;margin-bottom:10px;">
+          <div id="sig-direction-2" style="font-size:18px;font-weight:700;padding:10px 16px;border-radius:8px;display:inline-block;border:2px solid #1e2a40;background:#0b0f1a;min-width:160px;">&#8212;</div>
+          <div style="font-size:9px;color:#607a99;letter-spacing:2px;margin-top:6px;">FORECAST DIRECTION</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">CONFIDENCE</div>
+            <div id="sig-conf-2" style="font-size:14px;font-weight:700;color:#0ecb81;">&#8212;</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">TIMEFRAME</div>
+            <div id="sig-interval-2" style="font-size:14px;font-weight:700;color:#00ffff;">&#8212;</div>
+          </div>
+        </div>
+        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;margin-bottom:8px;">
+          <div style="font-size:9px;color:#607a99;margin-bottom:4px;">AI TARGET PRICE</div>
+          <div id="sig-target-2" style="font-size:16px;font-weight:700;color:#f0b90b;">&#8212;</div>
+        </div>
+        <div id="sig-advice-2" style="font-size:9px;color:#607a99;text-align:center;line-height:1.8;padding:8px;background:#0b0f1a;border-radius:4px;border:1px solid #1e2a40;">
+          Run a forecast to see your signal
+        </div>
+      </div>
+      <div id="record-panel-2" style="display:none;padding:10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="font-size:9px;color:#607a99;letter-spacing:2px;text-align:center;margin-bottom:8px;">AI FORECAST TRACK RECORD</div>
+        <div id="record-list-2" style="font-size:10px;">
+          <div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="panel-pairs">
+      <div class="pairs-header">
+        <div class="pairs-search">
+          <span style="color:var(--text3);font-size:11px;">&#8890;</span>
+          <input type="text" placeholder="Search..." oninput="filterPairs(2, this.value)">
+        </div>
+      </div>
+      <div class="quote-tab-bar-w">
+        <button onclick="setQuoteFor(2,this,'TECH')" class="qtab2 active">TECH</button>
+        <button onclick="setQuoteFor(2,this,'FINANCE')" class="qtab2">FINANCE</button>
+        <button onclick="setQuoteFor(2,this,'HEALTH')" class="qtab2">HEALTH</button>
+        <button onclick="setQuoteFor(2,this,'ENERGY')" class="qtab2">ENERGY</button>
+        <button onclick="setQuoteFor(2,this,'ETFS')" class="qtab2">ETFs</button>
+      </div>
+      <div class="pairs-cols"><span>Symbol</span><span>Price</span><span>Change</span></div>
+      <div class="pairs-list" id="pairs-list-2"></div>
+    </div>
+  </div>
+  <div class="chart-panel" data-widget="3">
+    <div class="panel-main">
+    <div class="chart-controls">
+      <span class="widget-tag">#3</span>
+      <div class="interval-tabs">
+        <button class="itab" data-widget="3" onclick="setTab(this,3)">1m</button>
+        <button class="itab" data-widget="3" onclick="setTab(this,3)">5m</button>
+        <button class="itab" data-widget="3" onclick="setTab(this,3)">15m</button>
+        <button class="itab" data-widget="3" onclick="setTab(this,3)">1H</button>
+        <button class="itab" data-widget="3" onclick="setTab(this,3)">4H</button>
+        <button class="itab active" data-widget="3" onclick="setTab(this,3)">1D</button>
+      </div>
+      <div class="chart-divider"></div>
+      <div class="search-wrap">
+        <span style="color:var(--text3);">&#8890;</span>
+        <input type="text" id="pair-input-3" value="NVDA" placeholder="e.g. AAPL, TSLA"
+          oninput="this.value=this.value.toUpperCase()"
+          onfocus="lastActiveWidget=3"
+          onkeydown="if(event.key==='Enter')runForecast(3)">
+      </div>
+      <button class="run-btn" id="run-btn-3" onclick="runForecast(3)">&#9654; ZEUS-AI</button>
+      <div class="zoom-btns" style="margin-left:6px;">
+        <button class="zbtn" onclick="zoomChart(-1,3)" title="Zoom In">+</button>
+        <button class="zbtn" onclick="zoomChart(1,3)" title="Zoom Out">&#8722;</button>
+        <button class="zbtn" onclick="resetZoom(3)" style="font-size:11px;width:30px;" title="Reset">&#10227;</button>
+        <button class="zbtn fullscreen-btn" id="fsbtn-3" onclick="toggleChartFullscreen(3)" title="Toggle fullscreen" style="width:30px;font-size:13px;">&#9974;</button>
+      </div>
+    </div>
+    <div class="chart-area">
+      <div id="tv-chart-3" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+      <div class="chart-overlay" id="chart-overlay-3">
+        <div id="overlay-spinner-3" class="spinner" style="display:none;"></div>
+        <div id="overlay-icon-3" style="font-size:26px;">&#128200;</div>
+        <div class="overlay-text" id="overlay-text-3">CLICK &#9654; ZEUS-AI TO FORECAST</div>
+      </div>
+      <div class="forecast-badge" id="fc-badge-3" style="display:none;">
+        <span class="fc-pill" id="fc-pill-3-a" style="color:var(--green);">&#8212;</span>
+        <span class="fc-pill" id="fc-pill-3-b" style="color:var(--accent);">&#8212;</span>
+      </div>
+    </div>
+    <div class="trades-panel">
+      <div class="trades-header">
+        <span class="trades-tab active" data-widget="3" data-tab="signal">Signal</span>
+        <span class="trades-tab" data-widget="3" data-tab="record" style="margin-left:12px;">Track Record</span>
+      </div>
+      <div id="signal-panel-3" style="display:block;padding:12px 10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="text-align:center;margin-bottom:10px;">
+          <div id="sig-direction-3" style="font-size:18px;font-weight:700;padding:10px 16px;border-radius:8px;display:inline-block;border:2px solid #1e2a40;background:#0b0f1a;min-width:160px;">&#8212;</div>
+          <div style="font-size:9px;color:#607a99;letter-spacing:2px;margin-top:6px;">FORECAST DIRECTION</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">CONFIDENCE</div>
+            <div id="sig-conf-3" style="font-size:14px;font-weight:700;color:#0ecb81;">&#8212;</div>
+          </div>
+          <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;">
+            <div style="font-size:9px;color:#607a99;margin-bottom:4px;">TIMEFRAME</div>
+            <div id="sig-interval-3" style="font-size:14px;font-weight:700;color:#00ffff;">&#8212;</div>
+          </div>
+        </div>
+        <div style="background:#0b0f1a;border:1px solid #1e2a40;border-radius:6px;padding:8px;text-align:center;margin-bottom:8px;">
+          <div style="font-size:9px;color:#607a99;margin-bottom:4px;">AI TARGET PRICE</div>
+          <div id="sig-target-3" style="font-size:16px;font-weight:700;color:#f0b90b;">&#8212;</div>
+        </div>
+        <div id="sig-advice-3" style="font-size:9px;color:#607a99;text-align:center;line-height:1.8;padding:8px;background:#0b0f1a;border-radius:4px;border:1px solid #1e2a40;">
+          Run a forecast to see your signal
+        </div>
+      </div>
+      <div id="record-panel-3" style="display:none;padding:10px;font-family:'IBM Plex Mono',monospace;width:100%;box-sizing:border-box;overflow-y:auto;">
+        <div style="font-size:9px;color:#607a99;letter-spacing:2px;text-align:center;margin-bottom:8px;">AI FORECAST TRACK RECORD</div>
+        <div id="record-list-3" style="font-size:10px;">
+          <div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="panel-pairs">
+      <div class="pairs-header">
+        <div class="pairs-search">
+          <span style="color:var(--text3);font-size:11px;">&#8890;</span>
+          <input type="text" placeholder="Search..." oninput="filterPairs(3, this.value)">
+        </div>
+      </div>
+      <div class="quote-tab-bar-w">
+        <button onclick="setQuoteFor(3,this,'TECH')" class="qtab2 active">TECH</button>
+        <button onclick="setQuoteFor(3,this,'FINANCE')" class="qtab2">FINANCE</button>
+        <button onclick="setQuoteFor(3,this,'HEALTH')" class="qtab2">HEALTH</button>
+        <button onclick="setQuoteFor(3,this,'ENERGY')" class="qtab2">ENERGY</button>
+        <button onclick="setQuoteFor(3,this,'ETFS')" class="qtab2">ETFs</button>
+      </div>
+      <div class="pairs-cols"><span>Symbol</span><span>Price</span><span>Change</span></div>
+      <div class="pairs-list" id="pairs-list-3"></div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -654,28 +847,6 @@ html,body{background:var(--bg);color:var(--text);font-family:var(--body);font-si
       <canvas id="mini-chart-gld" height="50" style="width:100%;margin-top:8px;display:block;"></canvas>
     </div>
   </div>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin-bottom:12px;letter-spacing:1px;">⚡ TOP STOCKS — Click any to get AI forecast</div>
-  <div id="stock-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;"></div>
-
-  <!-- MOST ACTIVE -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#607a99;margin:24px 0 12px;letter-spacing:1px;">⚡ MOST ACTIVE — Highest volume stocks today</div>
-  <div id="active-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
-
-  <!-- TOP GAINERS -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#0ecb81;margin:24px 0 12px;letter-spacing:1px;">📈 TOP GAINERS — Best performing stocks today</div>
-  <div id="gainers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
-
-  <!-- TOP LOSERS -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f6465d;margin:24px 0 12px;letter-spacing:1px;">📉 TOP LOSERS — Biggest decliners today</div>
-  <div id="losers-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:4px;"></div>
-
-
-  <!-- PENNY STOCKS -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#f0b90b;margin:24px 0 12px;letter-spacing:1px;">💰 PENNY STOCKS & SMALL CAPS — Under $10</div>
-  <div id="penny-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:0;"></div>
-
-  </div>
-</div>
 </div>
 <style>
 .mkt-card{background:#131926;border:1px solid #1e2a40;border-radius:8px;padding:14px;cursor:pointer;transition:all .2s;}
@@ -881,8 +1052,15 @@ const SUPA_URL  = 'https://gkxpwqryakgzgvvprbkl.supabase.co';
 const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdreHB3cXJ5YWtnemd2dnByYmtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDAxNTUsImV4cCI6MjA5Mzk3NjE1NX0.oMSZx15YsodlOdzPxg4d7a0WesYQRuPCRUZxZcqGA1I';
 // ── STATE ─────────────────────────────────────
 let supabaseClient = null, currentUser = null, currentSession = null;
-let chartData = null, currentRange = 200, currentPrice = 0, currentInterval = '1d';
+let currentPrice = 0;
 let currentQuote = 'TECH', authMode = 'signup', selectedPlan = 'free';
+let lastActiveWidget = 1;
+var widgetQuote = {1:'TECH', 2:'TECH', 3:'TECH'};
+const widgets = {
+  1:{chartData:null,currentRange:200,currentInterval:'1d',lwChart:null,lwResizeObs:null,lwCandleData:null,lwStepSec:86400,lwLastTime:0},
+  2:{chartData:null,currentRange:200,currentInterval:'1d',lwChart:null,lwResizeObs:null,lwCandleData:null,lwStepSec:86400,lwLastTime:0},
+  3:{chartData:null,currentRange:200,currentInterval:'1d',lwChart:null,lwResizeObs:null,lwCandleData:null,lwStepSec:86400,lwLastTime:0}
+};
 let marketsRefreshTimer = null;
 // ── SUPABASE INIT ─────────────────────────────
 if (window.supabase) {
@@ -934,9 +1112,23 @@ function showToast(msg, type) {
   t.textContent=msg; t.className='toast '+(type||'success'); t.classList.add('show');
   setTimeout(function(){t.classList.remove('show');},3500);
 }
-function showOverlay(show) {
-  var el=document.getElementById('chart-overlay');
-  if (el) el.classList.toggle('hidden',!show);
+function showOverlay(idx, show, computing) {
+  var el=document.getElementById('chart-overlay-'+idx);
+  if(!el) return;
+  if(!show){ el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  var sp=document.getElementById('overlay-spinner-'+idx);
+  var ic=document.getElementById('overlay-icon-'+idx);
+  var tx=document.getElementById('overlay-text-'+idx);
+  if(computing){
+    if(sp) sp.style.display='block';
+    if(ic) ic.style.display='none';
+    if(tx) tx.textContent='ZEUS-AI COMPUTING...';
+  } else {
+    if(sp) sp.style.display='none';
+    if(ic) ic.style.display='block';
+    if(tx) tx.textContent='CLICK \u25B6 ZEUS-AI TO FORECAST';
+  }
 }
 function getAuthHeaders() {
   if (currentSession) return {'Authorization':'Bearer '+currentSession.access_token,'Content-Type':'application/json'};
@@ -1173,39 +1365,70 @@ function showGuestLimit(){
 }
 function closeGuestLimit(){var o=document.getElementById('guest-limit-overlay');if(o)o.style.display='none';}
 // ── CHART ─────────────────────────────────────
-function setTab(el) {
+function setTab(el, idx) {
   var map={'1m':'1m','5m':'5m','15m':'15m','1H':'1h','4H':'4h','1D':'1d'};
-  currentInterval=map[el.textContent.trim()]||'1h';
-  document.querySelectorAll('.itab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active');
-  if (chartData) runForecast();
+  var w=widgets[idx];
+  w.currentInterval=map[el.textContent.trim()]||'1d'; w.currentRange=200;
+  lastActiveWidget=idx;
+  document.querySelectorAll('.itab[data-widget="'+idx+'"]').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  if (w.chartData) runForecast(idx);
+}
+// quote tabs that live inside a widget's own symbol list
+function setQuoteFor(idx, el, q){
+  widgetQuote[idx]=q;
+  lastActiveWidget=idx;
+  var bar=el.parentElement;
+  if(bar) bar.querySelectorAll('.qtab2').forEach(function(t){ t.classList.toggle('active', t===el); });
+  updatePairsList(idx);
 }
 function setQuote(el,q){
-  currentQuote=q;
-  document.querySelectorAll('.qtab,.qtab2').forEach(function(t){t.classList.toggle('active',t.textContent.trim()===q);});
-  updatePairsList();
+  var panel = el.closest ? el.closest('.chart-panel') : null;
+  var idx = panel ? parseInt(panel.getAttribute('data-widget')) : lastActiveWidget;
+  widgetQuote[idx]=q; lastActiveWidget=idx;
+  if(panel) panel.querySelectorAll('.qtab,.qtab2').forEach(function(t){t.classList.toggle('active',t.textContent.trim()===q);});
+  updatePairsList(idx);
 }
-function filterPairs(q){var query=q.toUpperCase().trim();document.querySelectorAll('.pair-row').forEach(function(row){var sym=(row.getAttribute('data-sym')||'').toUpperCase();row.style.display=(!query||sym.includes(query))?'':'none';});}
-var allTickerData = {};
-function updatePairsList() {
-  var pairs=quotePairs[currentQuote]||quotePairs['TECH'];
-  var listEl=document.getElementById('pairs-list'); if(!listEl) return;
-  listEl.innerHTML=pairs.map(function(sym){
-    var info=allTickerData[sym]||{p:0,c:0};
-    var up=info.c>=0;
-    var priceStr=info.p>0?'$'+info.p.toLocaleString(undefined,{maximumFractionDigits:2}):'';
-    var chgStr=info.c!==0?(up?'+':'')+info.c.toFixed(2)+'%':'';
-    return '<div class="pair-row" data-sym="'+sym+'"><span class="pr-sym">'+sym+'</span><span class="pr-price '+(up&&info.p>0?'up':'dn')+'">'+priceStr+'</span><span class="pr-chg '+(up?'up':'dn')+'">'+chgStr+'</span></div>';
-  }).join('');
+function filterPairs(idx, q){
+  var listEl=document.getElementById('pairs-list-'+idx); if(!listEl) return;
+  var query=(q||'').toUpperCase().trim();
   listEl.querySelectorAll('.pair-row').forEach(function(row){
-    row.addEventListener('click',function(){
-      document.getElementById('pair-input').value=this.getAttribute('data-sym');
-      listEl.querySelectorAll('.pair-row').forEach(function(r){r.classList.remove('active-pair');});
-      this.classList.add('active-pair');runForecast();
+    var sym=(row.getAttribute('data-sym')||'').toUpperCase();
+    row.style.display=(!query||sym.includes(query))?'':'none';
+  });
+}
+var allTickerData = {};
+function updatePairsList(idx) {
+  var targets = idx ? [idx] : [1,2,3];
+  targets.forEach(function(w){
+    var quote = widgetQuote[w] || 'TECH';
+    var pairs = quotePairs[quote] || quotePairs['TECH'];
+    var listEl = document.getElementById('pairs-list-'+w);
+    if(!listEl) return;
+    listEl.innerHTML = pairs.map(function(sym){
+      var info=allTickerData[sym]||{p:0,c:0};
+      var up=info.c>=0;
+      var priceStr=info.p>0?'$'+info.p.toLocaleString(undefined,{maximumFractionDigits:2}):'';
+      var chgStr=info.c!==0?(up?'+':'')+info.c.toFixed(2)+'%':'';
+      return '<div class="pair-row" data-sym="'+sym+'"><span class="pr-sym">'+sym+'</span><span class="pr-price '+(up&&info.p>0?'up':'dn')+'">'+priceStr+'</span><span class="pr-chg '+(up?'up':'dn')+'">'+chgStr+'</span></div>';
+    }).join('');
+    listEl.querySelectorAll('.pair-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        lastActiveWidget=w;
+        var inp=document.getElementById('pair-input-'+w);
+        if(inp) inp.value=this.getAttribute('data-sym');
+        listEl.querySelectorAll('.pair-row').forEach(function(r){r.classList.remove('active-pair');});
+        this.classList.add('active-pair');
+        runForecast(w);
+      });
     });
   });
 }
 
-async function runForecast(isAutoRun){
+async function runForecast(idx, isAutoRun){
+  idx = idx || lastActiveWidget;
+  lastActiveWidget = idx;
+  var w = widgets[idx];
   var isAdmin = currentUser && currentUser.email === 'alexclaor@gmail.com';
   if(!currentUser && !isAdmin){
     var now=Date.now();
@@ -1236,20 +1459,21 @@ async function runForecast(isAutoRun){
       }
     }
   }
-  var symbol=document.getElementById('pair-input').value.trim().toUpperCase().replace(/[\/\-\s]/g,'')||'AAPL';
-  document.getElementById('pair-input').value=symbol;
-  var btn=document.getElementById('run-btn');
+  var _inp=document.getElementById('pair-input-'+idx);
+  var symbol=_inp.value.trim().toUpperCase().replace(/[\/\-\s]/g,'')||'AAPL';
+  _inp.value=symbol;
+  var btn=document.getElementById('run-btn-'+idx);
   if(btn){btn.disabled=true;btn.textContent='... COMPUTING';}
   var _msgs=['... COMPUTING','Fetching data...','Running AI...','Almost ready...'];
-  var _mi=0;var _mt=setInterval(function(){_mi=(_mi+1)%_msgs.length;if(document.getElementById('run-btn'))document.getElementById('run-btn').textContent=_msgs[_mi];},3000);
-  showOverlay(true);
+  var _mi=0;var _mt=setInterval(function(){_mi=(_mi+1)%_msgs.length;var _b=document.getElementById('run-btn-'+idx);if(_b)_b.textContent=_msgs[_mi];},3000);
+  showOverlay(idx, true, true);
   try{
     var controller=new AbortController();
     var timeout=setTimeout(function(){controller.abort();},90000);
     var res=await smartFetch('/forecast',{
       method:'POST',
       headers:getAuthHeaders(),
-      body:JSON.stringify({symbol:symbol,interval:currentInterval}),
+      body:JSON.stringify({symbol:symbol,interval:w.currentInterval}),
       signal:controller.signal
     });
     clearTimeout(timeout);
@@ -1259,21 +1483,21 @@ async function runForecast(isAutoRun){
       throw new Error(ej.detail||('Error '+res.status));
     }
     var data=await res.json();
-    renderAll(data);
-    showOverlay(false);
+    renderAll(idx, data);
+    showOverlay(idx, false);
     showToast('Forecast complete!','success');
   }catch(e){
-    showToast('Error: '+(e.message||'unknown'),'error');
-    showOverlay(false);
+    showToast('Widget '+idx+': '+(e.message||'unknown'),'error');
+    showOverlay(idx, false);
   }finally{
     if(typeof _mt!=='undefined')clearInterval(_mt);
     if(btn){btn.disabled=false;btn.textContent='▶ ZEUS-AI';}
   }
 }
 
-function loadPair(sym){var clean=sym.toUpperCase().trim();document.getElementById('pair-input').value=clean;document.querySelectorAll('.pair-row').forEach(function(r){r.classList.toggle('active-pair',r.getAttribute('data-sym')===clean);});runForecast();if(typeof loadCompanyProfile==='function')loadCompanyProfile(clean);}
-function zoomChart(dir){if(!window._lwChart)return;try{var ts=window._lwChart.timeScale(),range=ts.getVisibleRange();if(!range)return;var mid=(range.from+range.to)/2,half=(range.to-range.from)/2,factor=dir<0?0.7:1.4;ts.setVisibleRange({from:Math.round(mid-half*factor),to:Math.round(mid+half*factor)});}catch(e){}}
-function resetZoom(){if(chartData)renderChart(chartData);}
+function loadPair(sym){var clean=sym.toUpperCase().trim();var _in=document.getElementById('pair-input-'+lastActiveWidget);if(_in)_in.value=clean;document.querySelectorAll('.pair-row').forEach(function(r){r.classList.toggle('active-pair',r.getAttribute('data-sym')===clean);});runForecast(lastActiveWidget);if(typeof loadCompanyProfile==='function')loadCompanyProfile(clean);}
+function zoomChart(dir, idx){var w=widgets[idx];if(!w||!w.lwChart)return;lastActiveWidget=idx;try{var ts=w.lwChart.timeScale(),range=ts.getVisibleRange();if(!range)return;var mid=(range.from+range.to)/2,half=(range.to-range.from)/2,factor=dir<0?0.7:1.4;ts.setVisibleRange({from:Math.round(mid-half*factor),to:Math.round(mid+half*factor)});}catch(e){}}
+function resetZoom(idx){var w=widgets[idx];if(w&&w.chartData)renderChart(idx,w.chartData);}
 // ── TOP TICKER ────────────────────────────────
 var _topTickerBuilt=false,_topTickerX=0,_topTickerRAF=null,_topTickerWidth=0;
 function updateTopTicker(){
@@ -1319,26 +1543,10 @@ async function fetchLiveTicker(){
           gld=btData.find(function(d){return d.s==='GLD';});
       function setBox(pid,cid,d){if(!d||!d.p)return;var pe=document.getElementById(pid),ce=document.getElementById(cid);if(pe)pe.textContent='$'+d.p.toLocaleString(undefined,{maximumFractionDigits:2});if(ce){ce.textContent=(d.c>=0?'+':'')+d.c.toFixed(2)+'%';ce.style.color=d.c>=0?'#0ecb81':'#f6465d';}}
       setBox('sp500-price','sp500-chg',sp);setBox('nasdaq-price','nasdaq-chg',qqq);setBox('gold-price','gold-chg',gld);setBox('dow-price','dow-chg',dow);
-      renderStockGrid();
     }
   }catch(e){console.log('Ticker unavailable');}
 }
 // ── ORDER BOOK & TRADES ───────────────────────
-function renderOrderBook(lastClose){
-  var asks=document.getElementById('asks-list'),bids=document.getElementById('bids-list'),spread=document.getElementById('ob-spread-val');
-  if(!asks||!bids)return;
-  var price=lastClose||currentPrice||50000,askRows='',bidRows='',totalAsk=0,totalBid=0;
-  for(var i=0;i<12;i++){var ap=(price*(1+(12-i)*0.00015+Math.random()*0.0001)).toFixed(2),aa=(Math.random()*3+0.1).toFixed(4);totalAsk+=parseFloat(aa);askRows+='<div class="ob-row ask"><span class="ob-price">'+ap+'</span><span class="ob-amt">'+aa+'</span><span class="ob-total">'+totalAsk.toFixed(3)+'</span><div class="ob-bar" style="width:'+(Math.random()*60+10)+'%"></div></div>';}
-  for(var j=0;j<12;j++){var bp=(price*(1-j*0.00015-Math.random()*0.0001)).toFixed(2),ba=(Math.random()*3+0.1).toFixed(4);totalBid+=parseFloat(ba);bidRows+='<div class="ob-row bid"><span class="ob-price">'+bp+'</span><span class="ob-amt">'+ba+'</span><span class="ob-total">'+totalBid.toFixed(3)+'</span><div class="ob-bar" style="width:'+(Math.random()*60+10)+'%"></div></div>';}
-  asks.innerHTML=askRows;bids.innerHTML=bidRows;
-  if(spread)spread.textContent='$'+(price*0.0003).toFixed(2);
-}
-function renderTrades(lastClose){
-  var list=document.getElementById('trades-list');if(!list)return;
-  var price=lastClose||currentPrice||50000,rows='';
-  for(var i=0;i<15;i++){var tp=(price*(1+(Math.random()-0.5)*0.0008)).toFixed(2),ta=(Math.random()*2).toFixed(4),up=Math.random()>0.5,now=new Date(),time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(Math.max(0,now.getSeconds()-i)).padStart(2,'0');rows+='<div class="trade-row"><span style="color:'+(up?'#0ecb81':'#f6465d')+'">'+tp+'</span><span style="text-align:right;color:#607a99;">'+ta+'</span><span style="text-align:right;color:#344a66;">'+time+'</span></div>';}
-  list.innerHTML=rows;
-}
 // ── MARKETS ───────────────────────────────────
 function fillMarketTable(tbodyId,list){
   var tbody=document.getElementById(tbodyId);if(!tbody)return;
@@ -1382,54 +1590,23 @@ async function fetchLiveMarkets(){
   fillMarketTable('tbl-trending',stocks.slice().sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);}));
 }
 
-function makeStockCard(s,color){
-  var up=parseFloat(s.changesPercentage||0)>=0,sym=s.symbol||'',price=parseFloat(s.price||0),chg=parseFloat(s.changesPercentage||0);
-  var bg=color?'rgba('+color+',0.06)':(up?'rgba(14,203,129,0.08)':'rgba(246,70,93,0.08)');
-  var border=color?'rgba('+color+',0.3)':(up?'rgba(14,203,129,0.3)':'rgba(246,70,93,0.3)');
-  var card=document.createElement('div');card.className='stock-grid-card';
-  card.style.cssText='border-color:'+border+';background:'+bg+';cursor:pointer;';
-  card.setAttribute('data-sym',sym);
-  card.setAttribute('onclick','window.scrollTo({top:0,behavior:"smooth"});loadPair(this.getAttribute("data-sym"))');
-  var d1=document.createElement('div');d1.className='sgc-sym';d1.textContent=sym;
-  var d2=document.createElement('div');d2.className='sgc-price';d2.textContent='$'+price.toLocaleString(undefined,{maximumFractionDigits:price<1?6:price<10?4:2});
-  var d3=document.createElement('div');d3.className='sgc-chg';d3.style.color=up?'#0ecb81':'#f6465d';d3.textContent=(up?'+':'')+chg.toFixed(2)+'%';
-  card.appendChild(d1);card.appendChild(d2);card.appendChild(d3);
-  return card.outerHTML;
-}
-function renderStockGrid(){
-  var stocks=[
-    {symbol:'AAPL',price:195.5,changesPercentage:0.52},{symbol:'MSFT',price:420.3,changesPercentage:-0.31},
-    {symbol:'NVDA',price:875.4,changesPercentage:2.15},{symbol:'TSLA',price:175.2,changesPercentage:-1.52},
-    {symbol:'GOOGL',price:175.8,changesPercentage:0.83},{symbol:'META',price:520.1,changesPercentage:0.76},
-    {symbol:'AMZN',price:195.3,changesPercentage:0.62},{symbol:'AMD',price:165.4,changesPercentage:1.84},
-    {symbol:'NFLX',price:640.2,changesPercentage:-0.41},{symbol:'JPM',price:210.5,changesPercentage:0.33},
-    {symbol:'V',price:275.3,changesPercentage:0.21},{symbol:'MA',price:465.2,changesPercentage:0.18},
-    {symbol:'JNJ',price:152.4,changesPercentage:-0.15},{symbol:'PFE',price:28.3,changesPercentage:-0.82},
-    {symbol:'XOM',price:112.5,changesPercentage:0.44},{symbol:'CVX',price:158.3,changesPercentage:0.62},
-    {symbol:'SPY',price:512.4,changesPercentage:0.32},{symbol:'QQQ',price:435.6,changesPercentage:0.41},
-  ];
-  if(btData&&btData.length>0){stocks=stocks.map(function(st){var live=btData.find(function(d){return d.s===st.symbol;});return live&&live.p>0?{symbol:st.symbol,price:live.p,changesPercentage:live.c}:st;});}
-  var grid=document.getElementById('stock-grid');if(!grid)return;
-  grid.innerHTML=stocks.map(function(s){return makeStockCard(s,null);}).join('');
-}
-
-
-function renderChart(data) {
-  chartData=data;window._chartData=data;window._candles=data.candles;
-  var candles=data.candles,container=document.getElementById('tv-chart');
+function renderChart(idx, data) {
+  var w=widgets[idx];
+  w.chartData=data;
+  var candles=data.candles,container=document.getElementById('tv-chart-'+idx);
   if(!container)return;
-  if(window._lwResizeObs){try{window._lwResizeObs.disconnect();}catch(e){}window._lwResizeObs=null;}
-  if(window._lwChart){try{window._lwChart.remove();}catch(e){}window._lwChart=null;}
+  if(w.lwResizeObs){try{w.lwResizeObs.disconnect();}catch(e){}w.lwResizeObs=null;}
+  if(w.lwChart){try{w.lwChart.remove();}catch(e){}w.lwChart=null;}
   var cw=container.clientWidth||800,ch=container.clientHeight||400;
   if(cw<10)cw=800;if(ch<10)ch=400;
   var chart;
   try{
     chart=LightweightCharts.createChart(container,{width:cw,height:ch,layout:{background:{type:'solid',color:'#060810'},textColor:'#607a99',fontSize:11},grid:{vertLines:{color:'#1e2a40',style:1},horzLines:{color:'#1e2a40',style:1}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:'#1e2a40'},timeScale:{borderColor:'#1e2a40',timeVisible:true,secondsVisible:false},handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true},handleScale:{axisPressedMouseMove:true,mouseWheel:true,pinch:true}});
-    window._lwChart=chart;
-  }catch(err){showOverlay(false);return;}
+    w.lwChart=chart;
+  }catch(err){showOverlay(idx,false);return;}
   var candleSeries=chart.addCandlestickSeries({upColor:'#0ecb81',downColor:'#f6465d',borderUpColor:'#0ecb81',borderDownColor:'#f6465d',wickUpColor:'#0ecb81',wickDownColor:'#f6465d'});
   var lwCandles=candles.map(function(c){return{time:Math.floor(new Date(c.t).getTime()/1000),open:parseFloat(c.o),high:parseFloat(c.h),low:parseFloat(c.l),close:parseFloat(c.c)};}).filter(function(c){return !isNaN(c.open)&&c.time>0;});
-  if(lwCandles.length===0){showOverlay(false);return;}
+  if(lwCandles.length===0){showOverlay(idx,false);return;}
   candleSeries.setData(lwCandles);
   function addLine(maData,color,width){
     var s=chart.addLineSeries({color:color,lineWidth:width||1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
@@ -1440,7 +1617,7 @@ function renderChart(data) {
   }
   addLine(data.ma7,'#1890ff',1.5);addLine(data.ma3,'#f6465d',1);addLine(data.ma25,'#00cc44',1.2);addLine(data.vwap600,'#f0b90b',1.5);addLine(data.vwap200,'#ff69b4',1);
   var freqMins={'1m':1,'5m':5,'15m':15,'1h':60,'4h':240,'1d':1440};
-  var stepSec=(freqMins[currentInterval]||60)*60,lastTime=lwCandles[lwCandles.length-1].time;
+  var stepSec=(freqMins[w.currentInterval]||60)*60,lastTime=lwCandles[lwCandles.length-1].time;
   function addForecast(fcData,startVal,color){
     var s=chart.addLineSeries({color:color,lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dashed,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
     var pts=[{time:lastTime,value:startVal}];
@@ -1453,14 +1630,15 @@ function renderChart(data) {
   addForecast(data.forecast_vwap600,data.vwap600[data.vwap600.length-1],'#f0b90b');
   addForecast(data.forecast_vwap200,data.vwap200[data.vwap200.length-1],'#ff69b4');
   var defaultVis={'1m':200,'5m':200,'15m':150,'1h':150,'4h':100,'1d':100};
-  var vis=Math.min(defaultVis[currentInterval]||200,lwCandles.length);
+  var vis=Math.min(defaultVis[w.currentInterval]||200,lwCandles.length);
   try{chart.timeScale().setVisibleRange({from:lwCandles[Math.max(0,lwCandles.length-vis)].time,to:lastTime+61*stepSec});}catch(e){}
-  window._lwResizeObs=new ResizeObserver(function(){if(!window._lwChart)return;try{var rw=container.clientWidth||800,rh=container.clientHeight||400;if(rw>0&&rh>0)window._lwChart.resize(rw,rh);}catch(e){}});
-  window._lwResizeObs.observe(container);
-  window._lwCandleData=lwCandles;window._lwStepSec=stepSec;window._lwLastTime=lastTime;
+  w.lwResizeObs=new ResizeObserver(function(){if(!w.lwChart)return;try{var rw=container.clientWidth||800,rh=container.clientHeight||400;if(rw>0&&rh>0)w.lwChart.resize(rw,rh);}catch(e){}});
+  w.lwResizeObs.observe(container);
+  w.lwCandleData=lwCandles;w.lwStepSec=stepSec;w.lwLastTime=lastTime;
 }
 
-function renderAll(data) {
+function renderAll(idx, data) {
+  var w=widgets[idx];
   currentPrice=data.last_close;
   var sym=data.symbol,el=function(id){return document.getElementById(id);};
   if(el('hdr-pair'))el('hdr-pair').textContent=sym;
@@ -1476,14 +1654,14 @@ function renderAll(data) {
   if(el('fc-price'))el('fc-price').textContent='$'+fmt(fcVal);
   var pct=(fcVal-data.last_close)/data.last_close*100;
   var shortIntervals=['1m','5m','15m'];
-  var isShort=shortIntervals.indexOf(currentInterval)>=0;
+  var isShort=shortIntervals.indexOf(w.currentInterval)>=0;
   var signalName='neut';
   if(isShort){
     var fv200=data.forecast_vwap200;
-    var _idx=currentInterval==='1m'?29:4;
+    var _idx=w.currentInterval==='1m'?29:4;
     if(fv200&&fv200.length>_idx){
       var v200_first=fv200[0],v200_fifth=fv200[_idx];
-      var threshold=(data.last_close||v200_first)*(currentInterval==='1m'?0.0002:0.0005);
+      var threshold=(data.last_close||v200_first)*(w.currentInterval==='1m'?0.0002:0.0005);
       if(Math.abs(v200_fifth-v200_first)<=threshold){signalName='neut';}
       else if(v200_first<v200_fifth){signalName='bull';}
       else{signalName='bear';}
@@ -1513,8 +1691,8 @@ function renderAll(data) {
   var isUp=pct>=0;
   if(el('hdr-chg')){el('hdr-chg').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg').className='pair-change'+(isUp?'':' dn');}
   if(el('hdr-chg2')){el('hdr-chg2').textContent=(isUp?'+':'')+pct.toFixed(2)+'%';el('hdr-chg2').style.color=isUp?'var(--green)':'var(--red)';}
-  renderChart(data);renderOrderBook(data.last_close);renderTrades(data.last_close);
-  document.getElementById('pair-input').value=sym;
+  renderChart(idx, data);
+  var _pin=document.getElementById('pair-input-'+idx); if(_pin)_pin.value=sym;
   // Update company name in header
   var hdrCo = document.getElementById('hdr-company');
   if(hdrCo) hdrCo.textContent = sym;
@@ -1527,7 +1705,7 @@ function renderAll(data) {
   }
   // Signal panel
   var _sigFull = signalName==='bull'?'BULLISH':signalName==='bear'?'BEARISH':'NEUTRAL';
-  updateSignalPanel(data, _sigFull, currentInterval);
+  updateSignalPanel(idx, data, _sigFull, w.currentInterval);
   // Track record
   var _fc7 = data.forecast_ma7 || [];
   var _tgt = _fc7.length > 0 ? _fc7[_fc7.length-1] : data.last_close;
@@ -1536,53 +1714,6 @@ function renderAll(data) {
   checkEmailCapture();
   updateUpgradePrompt();
   if(typeof loadCompanyProfile==='function'&&sym)loadCompanyProfile(sym);
-}
-
-async function renderAllStockGrids(){
-  var active=[], gainers=[], losers=[], pennies=[];
-  try{
-    var resp = await fetch(API_BASE+'/movers');
-    var data = await resp.json();
-    if(data && data.active && data.active.length){
-      active=data.active||[]; gainers=data.gainers||[]; losers=data.losers||[]; pennies=data.pennies||[];
-      console.log('Stock grids: live /movers active='+active.length);
-      var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
-      Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
-      return;
-    }
-  }catch(e){console.log('Movers failed:',e.message);}
-  var stocks=[
-    {symbol:'NVDA',price:128.26,changesPercentage:1.2,volume:169339208},{symbol:'AAPL',price:211.45,changesPercentage:0.8,volume:43669609},
-    {symbol:'TSLA',price:342.10,changesPercentage:-1.5,volume:46104415},{symbol:'AMD',price:127.30,changesPercentage:2.1,volume:34759930},
-    {symbol:'META',price:592.69,changesPercentage:-0.4,volume:15000000},{symbol:'MSFT',price:461.20,changesPercentage:0.3,volume:22000000},
-    {symbol:'GOOGL',price:175.85,changesPercentage:-0.6,volume:20444813},{symbol:'AMZN',price:201.32,changesPercentage:0.5,volume:27540521},
-    {symbol:'NFLX',price:1285.40,changesPercentage:1.8,volume:4847196},{symbol:'COIN',price:248.15,changesPercentage:-2.1,volume:7927507},
-    {symbol:'HOOD',price:73.64,changesPercentage:-3.0,volume:20817527},{symbol:'GME',price:21.96,changesPercentage:-2.4,volume:5279748},
-    {symbol:'AMC',price:2.51,changesPercentage:-3.2,volume:20258044},{symbol:'BB',price:3.91,changesPercentage:4.5,volume:12770209},
-    {symbol:'PTON',price:5.71,changesPercentage:2.3,volume:8901844},{symbol:'NIO',price:4.20,changesPercentage:-5.1,volume:47983830},
-    {symbol:'PLTR',price:124.80,changesPercentage:3.2,volume:45000000},{symbol:'SOFI',price:14.25,changesPercentage:1.8,volume:32000000},
-  ];
-  active=stocks.slice().sort(function(a,b){return b.volume-a.volume;});
-  gainers=stocks.filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
-  losers=stocks.filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;});
-  pennies=stocks.filter(function(s){return s.price<15;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
-
-  var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
-  Object.keys(grids).forEach(function(id){
-    var el=document.getElementById(id);
-    var cfg=grids[id];
-    if(el&&cfg.items.length) el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');
-    else if(el) el.innerHTML='<div style="color:#607a99;font-size:10px;padding:8px;">No data</div>';
-  });
-}
-function buildGrids(stocks){
-
-  var active=staticStocks.slice().sort(function(a,b){return b.volume-a.volume;});
-  var gainers=staticStocks.slice().filter(function(s){return s.changesPercentage>0;}).sort(function(a,b){return b.changesPercentage-a.changesPercentage;});
-  var losers=staticStocks.slice().filter(function(s){return s.changesPercentage<0;}).sort(function(a,b){return a.changesPercentage-b.changesPercentage;});
-  var pennies=staticStocks.filter(function(s){return s.price<15;}).sort(function(a,b){return Math.abs(b.changesPercentage)-Math.abs(a.changesPercentage);});
-  var grids={'active-grid':{items:active,color:null},'gainers-grid':{items:gainers,color:'14,203,129'},'losers-grid':{items:losers,color:'246,70,93'},'penny-grid':{items:pennies,color:'240,185,11'}};
-  Object.keys(grids).forEach(function(id){var el=document.getElementById(id);var cfg=grids[id];if(el&&cfg.items&&cfg.items.length)el.innerHTML=cfg.items.slice(0,18).map(function(s){return makeStockCard(s,cfg.color);}).join('');});
 }
 
 function drawMiniCharts(){
@@ -1679,9 +1810,9 @@ function cpSetPeriod(btn, days){
 function loadCompanyForecast(){
   if(!_cpCurrentSym) return;
   window.scrollTo({top:0,behavior:'smooth'});
-  var inp = document.getElementById('pair-input');
+  var inp = document.getElementById('pair-input-'+lastActiveWidget);
   if(inp) inp.value = _cpCurrentSym;
-  setTimeout(function(){ if(typeof runForecast==='function') runForecast(); }, 300);
+  setTimeout(function(){ if(typeof runForecast==='function') runForecast(lastActiveWidget); }, 300);
 }
 
 async function loadCPChart(sym, days){
@@ -1886,33 +2017,31 @@ function getTrialStatus(){
 
 
 // ── FULLSCREEN CHART ──────────────────────────────────
-function toggleChartFullscreen(){
-  var panel = document.querySelector('.chart-panel');
-  var btn   = document.querySelector('.fullscreen-btn');
+function toggleChartFullscreen(idx){
+  var panel=document.querySelector('.chart-panel[data-widget="'+idx+'"]');
   if(!panel) return;
-  var isFs  = panel.classList.toggle('is-fullscreen');
-  if(btn) btn.textContent = isFs ? '✕' : '⛶';
-  // Give DOM time to update then resize chart
+  lastActiveWidget=idx;
+  var isFs=panel.classList.toggle('is-fullscreen');
+  var btn=document.getElementById('fsbtn-'+idx);
+  if(btn) btn.textContent = isFs ? '\u2715' : '\u26F6';
   setTimeout(function(){
-    var el = document.getElementById('tv-chart');
-    var panel = document.querySelector('.chart-panel');
-    if(window._lwChart && el){
-      var w = el.parentElement ? el.parentElement.offsetWidth : window.innerWidth;
-      var h = el.parentElement ? el.parentElement.offsetHeight : window.innerHeight - 120;
-      window._lwChart.applyOptions({width: w || window.innerWidth, height: h || 400});
-      window._lwChart.timeScale().fitContent();
+    var w=widgets[idx], el=document.getElementById('tv-chart-'+idx);
+    if(w&&w.lwChart&&el){
+      var pw=el.parentElement?el.parentElement.offsetWidth:window.innerWidth;
+      var ph=el.parentElement?el.parentElement.offsetHeight:window.innerHeight-160;
+      try{ w.lwChart.applyOptions({width:pw||window.innerWidth,height:ph||400}); w.lwChart.timeScale().fitContent(); }catch(e){}
     }
-  }, 100);
-  // ESC to exit
+  },120);
   if(isFs){
     document.addEventListener('keydown', function onEsc(e){
-      if(e.key === 'Escape'){
+      if(e.key==='Escape'){
         panel.classList.remove('is-fullscreen');
-        if(btn) btn.textContent = '⛶';
+        var b=document.getElementById('fsbtn-'+idx);
+        if(b) b.textContent='\u26F6';
         setTimeout(function(){
-          var el2 = document.getElementById('tv-chart');
-          if(window._lwChart && el2) window._lwChart.applyOptions({width:el2.offsetWidth,height:el2.offsetHeight});
-        }, 50);
+          var w2=widgets[idx], el2=document.getElementById('tv-chart-'+idx);
+          if(w2&&w2.lwChart&&el2){ try{ w2.lwChart.applyOptions({width:el2.offsetWidth,height:el2.offsetHeight}); }catch(e){} }
+        },60);
         document.removeEventListener('keydown', onEsc);
       }
     });
@@ -1932,45 +2061,44 @@ window.addEventListener('DOMContentLoaded',function(){
   var visitCount=parseInt(localStorage.getItem('investleey_forecast_count_visits')||'0')+1;
   localStorage.setItem('investleey_forecast_count_visits',visitCount);
   // banner only shows via 2hr time limit
-  document.getElementById('pair-input').value='AAPL';
-  setTimeout(function(){runForecast(true);},1500);
-  setTimeout(renderStockGrid,500);
+  // Only widget #1 auto-runs, matching the original single-chart behaviour.
+  // Widgets #2 and #3 stay idle so a guest's free allowance isn't spent 3x on load.
+  setTimeout(function(){runForecast(1, true);},1500);
+  showOverlay(2, true, false);
+  showOverlay(3, true, false);
   setTimeout(function(){if(!_cpCurrentSym&&typeof loadCompanyProfile==='function')loadCompanyProfile('AAPL');},2500);
-  setTimeout(function(){renderAllStockGrids().catch(function(e){console.log(e);});},500);
-  setInterval(function(){renderAllStockGrids().catch(function(e){console.log(e);});},120000);
   setTimeout(drawMiniCharts,800);
   window.addEventListener('resize',drawMiniCharts);
 });
 
-// Signal tab logic
+// Signal / Track Record tabs (per widget)
 document.addEventListener('click', function(e){
-  if(e.target && e.target.id === 'signal-tab'){
-    var tl = document.getElementById('trades-list');
-    var sp = document.getElementById('signal-panel');
-    var tc = document.querySelector('.trades-cols');
-    if(tl && sp){
-      var isSignal = sp.style.display !== 'none';
-      if(isSignal){
-        sp.style.display='none';
-        if(tl) tl.style.display='';
-        if(tc) tc.style.display='';
-        e.target.classList.remove('active');
-      } else {
-        sp.style.display='block';
-        if(tl) tl.style.display='none';
-        if(tc) tc.style.display='none';
-        e.target.classList.add('active');
-      }
-    }
-  }
+  var t=e.target;
+  if(!t || !t.classList || !t.classList.contains('trades-tab')) return;
+  var idx=t.getAttribute('data-widget'), tab=t.getAttribute('data-tab');
+  if(!idx || !tab) return;
+  lastActiveWidget=parseInt(idx);
+  var sp=document.getElementById('signal-panel-'+idx);
+  var rp=document.getElementById('record-panel-'+idx);
+  if(sp) sp.style.display = (tab==='signal')?'block':'none';
+  if(rp) rp.style.display = (tab==='record')?'block':'none';
+  document.querySelectorAll('.trades-tab[data-widget="'+idx+'"]').forEach(function(x){x.classList.remove('active');});
+  t.classList.add('active');
+  if(tab==='record') renderTrackRecord();
 });
 
-function updateSignalPanel(data, signalName, interval){
-  var dir = document.getElementById('sig-direction');
-  var conf = document.getElementById('sig-conf');
-  var target = document.getElementById('sig-target');
-  var intv = document.getElementById('sig-interval');
-  var advice = document.getElementById('sig-advice');
+function updateSignalPanel(idx, data, signalName, interval){
+  // update this widget's panel and the shared Signal box together
+  var ids = [['sig-direction-'+idx,'sig-conf-'+idx,'sig-target-'+idx,'sig-interval-'+idx,'sig-advice-'+idx],
+             ['sig-direction','sig-conf','sig-target','sig-interval','sig-advice']];
+  ids.forEach(function(set){ _paintSignal(set, data, signalName, interval); });
+}
+function _paintSignal(set, data, signalName, interval){
+  var dir = document.getElementById(set[0]);
+  var conf = document.getElementById(set[1]);
+  var target = document.getElementById(set[2]);
+  var intv = document.getElementById(set[3]);
+  var advice = document.getElementById(set[4]);
   if(!dir) return;
 
   var colors = {BULLISH:'#0ecb81', BEARISH:'#f6465d', NEUTRAL:'#607a99'};
@@ -2026,12 +2154,14 @@ function saveTrackRecord(symbol, interval, signalName, lastClose, forecastTarget
 }
 
 function renderTrackRecord(){
-  var list = document.getElementById('record-list');
+  var list = null;
   var mainBox = document.getElementById('record-list-main');
+  var wLists = [];
+  for(var _i=1;_i<=3;_i++){ var _l=document.getElementById('record-list-'+_i); if(_l) wLists.push(_l); }
   var empty = '<div style="text-align:center;color:#607a99;padding:20px;">Run a forecast to start tracking</div>';
   if(_trackRecords.length === 0){
-    if(list) list.innerHTML = empty;
     if(mainBox) mainBox.innerHTML = empty;
+    wLists.forEach(function(l){ l.innerHTML = empty; });
     return;
   }
   var wins = _trackRecords.filter(function(r){return r.result==='WIN';}).length;
@@ -2064,34 +2194,10 @@ function renderTrackRecord(){
     html += '<div style="font-size:9px;font-weight:700;color:'+resColor+';">'+resText+'</div>';
     html += '</div>';
   });
-  if(list) list.innerHTML = html;
   if(mainBox) mainBox.innerHTML = html;
+  wLists.forEach(function(l){ l.innerHTML = html; });
 }
 
-document.addEventListener('click', function(e){
-  if(e.target && e.target.id === 'record-tab'){
-    var rp = document.getElementById('record-panel');
-    var sp = document.getElementById('signal-panel');
-    var tl = document.getElementById('trades-list');
-    var tc = document.querySelector('.trades-cols');
-    if(!rp) return;
-    var isOpen = rp.style.display !== 'none';
-    if(sp) sp.style.display='none';
-    if(tl) tl.style.display='none';
-    if(tc) tc.style.display='none';
-    document.querySelectorAll('.trades-tab').forEach(function(t){t.classList.remove('active');});
-    if(isOpen){
-      rp.style.display='none';
-      if(tl) tl.style.display='';
-      if(tc) tc.style.display='';
-      document.querySelector('.trades-tab').classList.add('active');
-    } else {
-      rp.style.display='block';
-      e.target.classList.add('active');
-      renderTrackRecord();
-    }
-  }
-});
 renderTrackRecord();
 
 // ── LIVE PROOF BANNER ────────────────────────────────────
@@ -2279,7 +2385,7 @@ var _miLoaded={earnings:false,splits:false,dividends:false,ipo:false,economic:fa
 function miTab(t){['earnings','splits','dividends','ipo','economic','gainers','screeners','faq'].forEach(function(id){var el=document.getElementById('mi-'+id);if(el)el.style.display=id===t?'block':'none';});document.querySelectorAll('.mi-tab').forEach(function(b){b.style.borderColor='#1e2a40';b.style.background='transparent';b.style.color='#607a99';});var btn=document.getElementById('mi-tab-'+t);if(btn){btn.style.borderColor='#0ecb81';btn.style.background='#0ecb8118';btn.style.color='#0ecb81';}if(t==='earnings'&&!_miLoaded.earnings)loadMIEarnings();else if(t==='splits'&&!_miLoaded.splits)loadMISplits();else if(t==='dividends'&&!_miLoaded.dividends)loadMIDividends();else if(t==='ipo'&&!_miLoaded.ipo)loadMIIPO();else if(t==='economic'&&!_miLoaded.economic)loadMIEconomic();else if(t==='gainers'&&!_miLoaded.gainers)loadMIGainers();}
 
 function miTile(symbol,name,detail,badge,badgeColor){var colors=['#0ecb81','#00b4d8','#f0b90b','#f6465d','#9b59b6','#e67e22'];var col=colors[symbol.charCodeAt(0)%colors.length];var init=symbol.replace('.','').substring(0,2).toUpperCase();return '<div onclick="miLoadForecast(\''+symbol+'\')" style="background:#131926;border:1px solid #1e2a40;border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor=\'#0ecb81\'" onmouseout="this.style.borderColor=\'#1e2a40\'">'+'<div style="height:60px;display:flex;align-items:center;justify-content:center;font-family:IBM Plex Mono,monospace;font-size:20px;font-weight:700;color:'+col+';background:'+col+'15;">'+init+'</div>'+'<div style="padding:8px 10px;"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;color:#d0e0f0;margin-bottom:2px;">'+symbol+'</div><div style="font-size:9px;color:#607a99;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'+(detail?'<div style="font-size:9px;color:#607a99;margin-bottom:4px;">'+detail+'</div>':'')+(badge?'<span style="font-size:8px;padding:2px 5px;border-radius:3px;background:'+badgeColor+'18;color:'+badgeColor+';border:1px solid '+badgeColor+'44;font-family:IBM Plex Mono,monospace;">'+badge+'</span>':'')+'</div></div>';}
-function miLoadForecast(symbol){window.scrollTo({top:0,behavior:'smooth'});var inp=document.getElementById('pair-input');if(inp)inp.value=symbol;setTimeout(function(){if(typeof runForecast==='function')runForecast();},400);}
+function miLoadForecast(symbol){window.scrollTo({top:0,behavior:'smooth'});var inp=document.getElementById('pair-input-'+lastActiveWidget);if(inp)inp.value=symbol;setTimeout(function(){if(typeof runForecast==='function')runForecast(lastActiveWidget);},400);}
 function loadMIDividends(){_miLoaded.dividends=true;var g=document.getElementById('mi-dividends-grid');if(g)g.innerHTML='<div style="color:#607a99;font-size:10px;padding:12px;">Loading...</div>';
   var today=new Date(),from=today.toISOString().split('T')[0],to=new Date(today.getTime()+30*86400000).toISOString().split('T')[0];
   fetch('https://api.polygon.io/v3/reference/dividends?ex_dividend_date.gte='+from+'&ex_dividend_date.lte='+to+'&limit=20&order=asc&apiKey=rrU7PLF7tbDwu2cYpu2KvxTlpvl_QmyG')
@@ -2676,7 +2782,8 @@ document.addEventListener('DOMContentLoaded',function(){loadMIEarnings();});
   <div class="pricing-box">
     <button class="close-btn2" onclick="closePricing()">×</button>
     <div class="pricing-title">⚡ INVESTLEEY PLANS</div>
-    <div class="pricing-sub">Unlock the power of AI stock forecasting<div style="display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap;margin:16px 0;padding:12px;background:#0b0f1a;border-radius:8px;border:1px solid #1e2a40;">
+    <div class="pricing-sub">Unlock the power of AI stock forecasting</div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap;margin:16px 0;padding:12px;background:#0b0f1a;border-radius:8px;border:1px solid #1e2a40;">
   <div style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#607a99;">
     <span style="color:#0ecb81;font-size:14px;">🔒</span> SSL Secured
   </div>
